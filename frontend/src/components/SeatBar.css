@@ -1,0 +1,54 @@
+.seatbar {
+  min-height: 0;
+}
+
+/* 横排：所有席位等宽并排，窄屏时在条内横向滚动 */
+.seatbar.is-row .seatbar-track {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(180px, 1fr));
+  gap: var(--s-4);
+  padding: var(--s-4);
+  overflow-x: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* 主持人席位居中，单独加一条左右分隔线 */
+.seatbar.is-row .seat.is-host {
+  border-inline: 1px solid var(--line);
+  border-radius: 0;
+  justify-content: center;
+}
+
+.seatbar.is-row .seat.is-host.st-speaking {
+  border-radius: var(--r-16);
+  border-color: transparent;
+}
+
+/* 纵排：宽屏左栏 */
+.seatbar.is-column {
+  height: 100%;
+}
+
+.seatbar.is-column .seatbar-track {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  height: 100%;
+  padding: var(--s-4);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+.seatbar.is-column .seat.is-host {
+  border-block: 1px solid var(--line);
+  border-radius: 0;
+}
+
+.seatbar.is-column .seat.is-host.st-speaking {
+  border-radius: var(--r-16);
+  border-color: transparent;
+}

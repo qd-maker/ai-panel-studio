@@ -1,0 +1,128 @@
+/* 顶栏直接贴在背景上，不加边框 */
+.hostbar {
+  display: flex;
+  align-items: center;
+  gap: var(--s-16);
+  min-width: 0;
+  padding: 0 var(--s-4);
+}
+
+.hostbar-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+  flex-shrink: 0;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.hostbar-live.is-live {
+  color: var(--accent);
+}
+
+.hostbar-topic {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-size: var(--fs-20);
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* 环节：去框，当前环节用追光色文字 */
+.hostbar-steps {
+  display: flex;
+  gap: var(--s-16);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--text-2);
+  font-size: var(--fs-14);
+}
+
+.hostbar-steps li {
+  position: relative;
+  transition: color var(--t-200) var(--ease);
+}
+
+.hostbar-steps li.is-current {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.hostbar-steps li.is-current::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: -4px;
+  left: 0;
+  height: 2px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+}
+
+.hostbar-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.hostbar-count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-14);
+}
+
+.hostbar-count span {
+  color: var(--text-2);
+}
+
+.hostbar-track {
+  display: block;
+  width: 96px;
+  height: 4px;
+  border-radius: var(--r-full);
+  background: var(--fill-strong);
+  overflow: hidden;
+}
+
+.hostbar-fill {
+  display: block;
+  height: 100%;
+  background: var(--text-2);
+  transform-origin: left;
+  transition: transform var(--t-450) var(--ease);
+}
+
+.hostbar-abort {
+  flex-shrink: 0;
+}
+
+@media (max-width: 1023px) {
+  .hostbar {
+    flex-wrap: wrap;
+    gap: var(--s-8) var(--s-12);
+  }
+
+  .hostbar-topic {
+    flex-basis: calc(100% - 80px);
+    font-size: var(--fs-16);
+    white-space: normal;
+  }
+
+  .hostbar-steps {
+    gap: var(--s-12);
+    font-size: var(--fs-12);
+  }
+
+  .hostbar-progress {
+    margin-left: auto;
+  }
+
+  .hostbar-track {
+    width: 56px;
+  }
+}

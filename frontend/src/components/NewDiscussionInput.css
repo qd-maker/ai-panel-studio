@@ -1,0 +1,128 @@
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+}
+
+.composer-label {
+  font-size: var(--fs-24);
+  font-weight: 600;
+}
+
+/* 唯一一层闭合边框：输入框外框；里面的按钮和计数一律不加框 */
+.composer-box {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--r-16);
+  background: var(--surface);
+  box-shadow: var(--ring-strong);
+  transition: box-shadow var(--t-200) var(--ease);
+}
+
+.composer-box:focus-within {
+  box-shadow: inset 0 0 0 1px rgba(236, 238, 241, 0.32);
+}
+
+.composer-input {
+  width: 100%;
+  padding: var(--s-24) var(--s-24) var(--s-12);
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-20);
+  outline: none;
+}
+
+.composer-input::placeholder {
+  color: var(--text-2);
+}
+
+.composer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-8) var(--s-16);
+  padding: var(--s-8) var(--s-12) var(--s-12) var(--s-24);
+}
+
+.composer-count {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-4);
+  color: var(--text-2);
+  font-size: var(--fs-14);
+}
+
+.composer-count button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: var(--r-8);
+  background: none;
+  color: var(--text);
+  font-size: var(--fs-16);
+  transition: background var(--t-120) var(--ease);
+}
+
+.composer-count button:hover:not(:disabled) {
+  background: var(--fill-strong);
+}
+
+.composer-count button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.composer-count b {
+  min-width: 1.2em;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-16);
+  text-align: center;
+}
+
+.composer-hint {
+  flex: 1;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+.composer-hint.is-error {
+  color: var(--text);
+}
+
+.composer-len {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+}
+
+.composer-submit {
+  height: 40px;
+}
+
+@media (max-width: 1023px) {
+  .composer-label {
+    font-size: var(--fs-20);
+  }
+
+  .composer-input {
+    padding: var(--s-16) var(--s-16) var(--s-8);
+    font-size: var(--fs-16); /* 移动端输入框不小于 16px，避免 iOS 聚焦时放大页面 */
+  }
+
+  .composer-row {
+    padding: var(--s-8) var(--s-12) var(--s-12) var(--s-16);
+  }
+
+  .composer-hint {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .composer-submit {
+    margin-left: auto;
+  }
+}

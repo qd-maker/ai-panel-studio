@@ -1,0 +1,141 @@
+/* 演播厅：舞台 + 席位 + 记录。页面本身不滚动，每个区域在自己的容器里滚动。 */
+.studio {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--s-16);
+  height: 100%;
+  min-height: 0;
+}
+
+.studio-grid {
+  display: grid;
+  gap: var(--s-16);
+  min-height: 0;
+  /* ≥1600：席位纵排 | 舞台 + 记录 | 共识与分歧 */
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr) minmax(320px, 400px);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas:
+    'seats stage  side'
+    'seats record side';
+}
+
+.area-seats {
+  grid-area: seats;
+  min-height: 0;
+  min-width: 0;
+}
+
+.area-stage {
+  grid-area: stage;
+  min-width: 0;
+}
+
+.area-record {
+  grid-area: record;
+  min-height: 0;
+  border-top: 1px solid var(--line);
+}
+
+.area-insights {
+  grid-area: side;
+  min-height: 0;
+}
+
+.area-tabs {
+  display: none;
+}
+
+.area-tabs button {
+  border: 0;
+  background: none;
+}
+
+.studio-replay {
+  position: absolute;
+  right: var(--s-16);
+  bottom: var(--s-16);
+}
+
+/* 1024–1599：席位条在上，下面两栏 */
+@media (max-width: 1599px) {
+  .studio-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 380px);
+    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'seats  seats'
+      'stage  side'
+      'record side';
+  }
+}
+
+/* <1024：席位条 + 舞台 + 标签切换记录和共识分歧 */
+@media (max-width: 1023px) {
+  .studio {
+    gap: var(--s-8);
+  }
+
+  .studio-grid {
+    gap: var(--s-8);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr);
+    grid-template-areas:
+      'seats'
+      'stage'
+      'tabs'
+      'main';
+  }
+
+  .area-record,
+  .area-insights {
+    grid-area: main;
+    border-top: 0;
+  }
+
+  .studio-grid[data-tab='record'] .area-insights,
+  .studio-grid[data-tab='insights'] .area-record {
+    display: none;
+  }
+
+  .area-tabs {
+    grid-area: tabs;
+    display: flex;
+    gap: var(--s-24);
+    padding: 0 var(--s-8);
+    border-bottom: 1px solid var(--line);
+  }
+
+  .area-tabs button {
+    position: relative;
+    height: 36px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--text-2);
+    font-size: var(--fs-14);
+  }
+
+  .area-tabs button.is-on {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .area-tabs button.is-on::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    bottom: -1px;
+    left: 0;
+    height: 2px;
+    background: var(--text);
+  }
+
+  /* 窄屏席位只留一行关注点，省出舞台和记录的高度 */
+  .seatbar .seat-view > div:last-child {
+    display: none;
+  }
+
+  .seatbar .seat-view dd {
+    -webkit-line-clamp: 1;
+  }
+}

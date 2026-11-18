@@ -1,0 +1,245 @@
+/* 「深场演播厅 · 单束追光」设计 token。组件只从这里取值，不另做颜色、字号、间距决策。 */
+
+:root {
+  /* ---- 颜色：5 个角色 ---- */
+  --bg: #0b0d10; /* 背景：页面、舞台 */
+  --surface: #16191e; /* 表面：席位条、右栏、记录 */
+  --text: #eceef1; /* 主文字（表面 15.2:1） */
+  --text-2: #9ba3ae; /* 次文字，也是最浅的一档灰（表面 6.9:1） */
+  --accent: #f5b841; /* 追光：只给正在发生的东西（表面 9.9:1） */
+  --accent-rgb: 245, 184, 65;
+  --on-accent: #14100a; /* 追光底上的文字（10.7:1） */
+
+  /* 描边与填充：由主文字派生，不算新颜色 */
+  --line: rgba(236, 238, 241, 0.08);
+  --line-strong: rgba(236, 238, 241, 0.14);
+  --fill: rgba(236, 238, 241, 0.05);
+  --fill-strong: rgba(236, 238, 241, 0.09);
+
+  /* ---- 字体 ---- */
+  --font-sans: 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Mono', 'Consolas', ui-monospace, monospace;
+
+  /* ---- 字号阶梯 ---- */
+  --fs-12: 12px; /* 时间码、角标 */
+  --fs-14: 14px; /* Title、说明 */
+  --fs-16: 16px; /* 记录正文 */
+  --fs-20: 20px; /* 话题、栏目标题 */
+  --fs-24: 24px; /* 舞台发言人姓名 */
+  --fs-32: 32px; /* 舞台字幕 */
+
+  /* ---- 间距 ---- */
+  --s-4: 4px;
+  --s-8: 8px;
+  --s-12: 12px;
+  --s-16: 16px;
+  --s-24: 24px;
+  --s-32: 32px;
+  --s-48: 48px;
+
+  /* ---- 圆角：3 档 ---- */
+  --r-8: 8px; /* 按钮、输入框 */
+  --r-16: 16px; /* 卡片、面板 */
+  --r-full: 999px; /* 头像、胶囊 */
+
+  /* ---- 边框：单闭合，内描边 ---- */
+  --ring: inset 0 0 0 1px var(--line);
+  --ring-strong: inset 0 0 0 1px var(--line-strong);
+  --glow: 0 0 0 2px rgba(var(--accent-rgb), 0.9), 0 0 24px rgba(var(--accent-rgb), 0.35);
+
+  /* ---- 动效 ---- */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-120: 120ms;
+  --t-200: 200ms;
+  --t-450: 450ms;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: var(--fs-14);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+  /* 页面本身不滚动，各区域在自己的容器里滚动 */
+  overflow: hidden;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+button:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+.scroll-y {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+/* 面板：唯一一层闭合边框 */
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: var(--surface);
+  border-radius: var(--r-16);
+  box-shadow: var(--ring);
+}
+
+/* 面板内分区只用单向细线 */
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  padding: var(--s-12) var(--s-16);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  letter-spacing: 0.08em;
+  color: var(--text-2);
+}
+
+.panel-title {
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+/* 按钮：去框，用填充区分 */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+  height: 36px;
+  padding: 0 var(--s-16);
+  border: 0;
+  border-radius: var(--r-8);
+  background: var(--fill-strong);
+  font-size: var(--fs-14);
+  transition: background var(--t-120) var(--ease), transform var(--t-120) var(--ease);
+}
+
+.btn:hover {
+  background: var(--line-strong);
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.btn-primary:hover {
+  background: color-mix(in srgb, var(--accent) 85%, var(--text));
+}
+
+/* LIVE 指示灯：正在发生，用追光色 */
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(var(--accent-rgb), 0);
+  }
+}
+
+/* 头像：专属色只用于头像圈 */
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--r-full);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 2px var(--c);
+  color: var(--text);
+  font-size: var(--fs-14);
+  font-weight: 600;
+}
+
+.avatar-sm {
+  width: 24px;
+  height: 24px;
+  font-size: var(--fs-12);
+  box-shadow: inset 0 0 0 1.5px var(--c);
+}
+
+/* 姓名：专属色只用于姓名文字 */
+.guest-name-c {
+  color: var(--c);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,104 @@
+/* 记录：舞台下方的历史发言，不加卡片，条目之间只靠间距分隔 */
+.transcript {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.transcript-scroll {
+  flex: 1;
+  padding: var(--s-16) var(--s-24) var(--s-32);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 24px, #000 calc(100% - 16px), transparent 100%);
+}
+
+.transcript-empty {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--s-24) 0;
+  color: var(--text-2);
+  text-align: center;
+}
+
+.transcript-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-24);
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.utt {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: var(--s-12);
+  animation: utt-in var(--t-450) var(--ease) both;
+}
+
+.utt-avatar {
+  margin-top: 2px;
+}
+
+.utt-body {
+  min-width: 0;
+}
+
+.utt-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s-8);
+  margin-bottom: var(--s-4);
+}
+
+.utt-name {
+  font-size: var(--fs-14);
+}
+
+.utt-title {
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+.utt-target {
+  color: var(--text);
+  font-size: var(--fs-12);
+}
+
+.utt-time {
+  margin-left: auto;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+}
+
+.utt-text {
+  font-size: var(--fs-16);
+  line-height: 1.75;
+}
+
+@keyframes utt-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.transcript-jump {
+  position: absolute;
+  bottom: var(--s-16);
+  left: 50%;
+  translate: -50% 0;
+  height: 32px;
+  padding: 0 var(--s-16);
+  border: 0;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  animation: utt-in var(--t-200) var(--ease);
+}

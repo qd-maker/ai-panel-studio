@@ -1,0 +1,120 @@
+/* 预览台外壳：整页固定为视口高度，内容区各自滚动 */
+.app {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100dvh;
+}
+
+.app-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8) var(--s-16);
+  padding: var(--s-8) var(--s-16);
+  border-bottom: 1px solid var(--line);
+}
+
+.app-brand {
+  font-weight: 600;
+}
+
+.app-brand em {
+  margin-left: var(--s-8);
+  color: var(--text-2);
+  font-size: var(--fs-12);
+  font-style: normal;
+  font-weight: 400;
+}
+
+.app-nav {
+  display: flex;
+  gap: var(--s-4);
+}
+
+.app-nav-btn {
+  height: 28px;
+  padding: 0 var(--s-12);
+  border: 0;
+  border-radius: var(--r-8);
+  background: none;
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+.app-nav-btn.is-on {
+  background: var(--fill-strong);
+  color: var(--text);
+}
+
+.app-main {
+  min-height: 0;
+  padding: var(--s-12);
+}
+
+/* 首页：整页在自己的容器里滚动 */
+.home {
+  height: 100%;
+}
+
+.home-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-48);
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--s-32) var(--s-24) var(--s-48);
+}
+
+.home-group-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-8);
+  margin-bottom: var(--s-16);
+  font-size: var(--fs-20);
+  font-weight: 600;
+}
+
+.home-group-title span {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-14);
+  font-weight: 400;
+}
+
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--s-16);
+}
+
+/* 正在直播的卡片更宽，最新发言有地方展开 */
+.home-group.is-live .home-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 480px), 1fr));
+}
+
+/* 单页视图（阵容、总结）：页面组件自己控制内容宽度 */
+.single {
+  position: relative;
+  height: 100%;
+}
+
+/* 预览台专用：切换总结「生成中」状态的按钮 */
+.summary-toggle {
+  position: absolute;
+  right: var(--s-16);
+  bottom: var(--s-16);
+  height: 28px;
+  font-size: var(--fs-12);
+}
+
+@media (max-width: 1023px) {
+  .app-main {
+    padding: var(--s-8);
+  }
+
+  .home-inner {
+    gap: var(--s-32);
+    padding: var(--s-16) var(--s-8) var(--s-32);
+  }
+}

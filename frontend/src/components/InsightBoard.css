@@ -1,0 +1,169 @@
+.insights {
+  height: 100%;
+}
+
+/* 总结页内嵌：不占满高度，不自带内边距 */
+.insights.is-final {
+  height: auto;
+}
+
+.insights.is-final .insights-scroll {
+  padding: 0;
+  gap: var(--s-24);
+}
+
+.insights.is-final .ins-title {
+  padding: 0;
+  font-size: var(--fs-16);
+}
+
+.insights.is-final .ins-item {
+  padding-inline: 0;
+}
+
+.insights-scroll {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-32);
+  padding: var(--s-24) var(--s-16);
+}
+
+.ins-title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-8);
+  margin-bottom: var(--s-12);
+  padding: 0 var(--s-8);
+  font-size: var(--fs-20);
+  font-weight: 600;
+}
+
+.ins-count {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--fs-14);
+  font-weight: 400;
+}
+
+.ins-empty {
+  padding: 0 var(--s-8);
+  color: var(--text-2);
+  font-size: var(--fs-14);
+}
+
+.ins-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* 条目：面板里不再套边框，用分隔线和填充 */
+.ins-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-8);
+  padding: var(--s-12) var(--s-8);
+  border-radius: var(--r-8);
+  transition: opacity var(--t-450) var(--ease);
+}
+
+.ins-item + .ins-item {
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--r-8) var(--r-8);
+}
+
+.ins-content {
+  font-size: var(--fs-14);
+  line-height: 1.6;
+}
+
+.ins-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+}
+
+.ins-avatars {
+  display: inline-flex;
+  min-height: 24px;
+}
+
+.ins-avatars .avatar + .avatar {
+  margin-left: -4px;
+}
+
+.ins-avatars .avatar {
+  box-shadow: inset 0 0 0 1.5px var(--c), 0 0 0 2px var(--surface);
+}
+
+.ins-status {
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+/* ---------- 立场光谱 ---------- */
+.spec-track {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--s-8);
+}
+
+.spec-line {
+  position: relative;
+  height: 2px;
+  border-radius: var(--r-full);
+  background: var(--line-strong);
+}
+
+/* 中点刻度 */
+.spec-line::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2px;
+  height: 10px;
+  border-radius: var(--r-full);
+  background: var(--line-strong);
+  translate: -50% -50%;
+}
+
+.spec-labels {
+  display: flex;
+  justify-content: space-between;
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+/* 已推翻 / 已化解：降低存在感 */
+.ins-item.st-dropped,
+.ins-item.st-resolved {
+  opacity: 0.55;
+}
+
+.ins-item.st-dropped .ins-content {
+  text-decoration: line-through;
+  text-decoration-color: var(--text-2);
+}
+
+/* 新增或变化：追光照一次后淡出 */
+.ins-item.is-fresh {
+  animation: ins-flash 1.8s var(--ease);
+}
+
+@keyframes ins-flash {
+  0% {
+    background: rgba(var(--accent-rgb), 0.16);
+    box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.8);
+  }
+  100% {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px transparent;
+  }
+}

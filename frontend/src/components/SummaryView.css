@@ -1,0 +1,249 @@
+/* 总结页：整页在自己的容器里滚动，正文直接贴在背景上，右栏一层面板 */
+.summary {
+  height: 100%;
+}
+
+.summary-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--s-32) var(--s-24) var(--s-48);
+}
+
+/* ---------- 头部：话题 + 统计 ---------- */
+.summary-head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  padding-bottom: var(--s-24);
+  border-bottom: 1px solid var(--line);
+}
+
+.summary-topic {
+  font-size: var(--fs-32);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.summary-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-8) var(--s-32);
+  margin: 0;
+}
+
+.summary-stats > div {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-8);
+}
+
+.summary-stats dt {
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+.summary-stats dd {
+  display: flex;
+  gap: var(--s-4);
+  margin: 0;
+}
+
+.summary-stats b {
+  font-family: var(--font-mono);
+  font-size: var(--fs-20);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary-stats small {
+  margin-left: 2px;
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+/* ---------- 两栏 ---------- */
+.summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 720px) minmax(300px, 1fr);
+  gap: var(--s-48);
+  margin-top: var(--s-32);
+}
+
+.summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-48);
+  min-width: 0;
+}
+
+.summary-h2 {
+  margin-bottom: var(--s-16);
+  font-size: var(--fs-20);
+  font-weight: 600;
+}
+
+/* ---------- 总结正文 ---------- */
+.summary-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-16);
+}
+
+.summary-p {
+  font-size: var(--fs-16);
+  line-height: 28px;
+  animation: summary-rise 0.7s var(--ease) both;
+}
+
+.summary-p:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.summary-p:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* 首字下沉：占两行，字号取阶梯最大一档 */
+.dropcap::first-letter {
+  float: left;
+  margin: 0 var(--s-12) 0 0;
+  font-size: var(--fs-32);
+  font-weight: 700;
+  line-height: 56px;
+}
+
+.summary-sign {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  margin-top: var(--s-8);
+  color: var(--text-2);
+  font-size: var(--fs-14);
+}
+
+.summary-note {
+  margin-left: auto;
+  font-size: var(--fs-12);
+}
+
+@keyframes summary-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.summary-pending {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  color: var(--text-2);
+}
+
+.summary-line {
+  height: 16px;
+  border-radius: var(--r-8);
+  background: linear-gradient(90deg, var(--fill) 0, var(--fill-strong) 80px, var(--fill) 160px);
+  background-size: 640px;
+  animation: summary-sk 1.4s linear infinite;
+}
+
+.summary-line.short {
+  width: 60%;
+}
+
+@keyframes summary-sk {
+  from {
+    background-position: -320px 0;
+  }
+  to {
+    background-position: 320px 0;
+  }
+}
+
+.summary-empty {
+  color: var(--text-2);
+}
+
+/* ---------- 嘉宾最终立场 ---------- */
+.stance-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.stance-item {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: var(--s-12);
+  padding: var(--s-16) 0;
+}
+
+.stance-item + .stance-item {
+  border-top: 1px solid var(--line);
+}
+
+.stance-body {
+  min-width: 0;
+}
+
+.stance-who {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--s-8);
+  font-size: var(--fs-14);
+}
+
+.stance-title {
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+.stance-count {
+  margin-left: auto;
+  color: var(--text-2);
+  font-size: var(--fs-12);
+  font-variant-numeric: tabular-nums;
+}
+
+.stance-text {
+  margin-top: var(--s-4);
+  font-size: var(--fs-16);
+  line-height: 1.7;
+}
+
+/* ---------- 右栏：最终共识与分歧 ---------- */
+.summary-side {
+  align-self: start;
+  padding: var(--s-24);
+  border-radius: var(--r-16);
+  background: var(--surface);
+  box-shadow: var(--ring);
+}
+
+@media (max-width: 1023px) {
+  .summary-inner {
+    padding: var(--s-16) var(--s-8) var(--s-32);
+  }
+
+  .summary-topic {
+    font-size: var(--fs-24);
+  }
+
+  .summary-stats {
+    gap: var(--s-8) var(--s-16);
+  }
+
+  .summary-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-32);
+    margin-top: var(--s-24);
+  }
+
+  .summary-side {
+    padding: var(--s-16);
+  }
+}

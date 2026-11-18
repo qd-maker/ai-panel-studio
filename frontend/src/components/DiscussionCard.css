@@ -1,0 +1,129 @@
+/* 卡片：唯一一层闭合边框，里面的状态、标签都不加框 */
+.dcard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  width: 100%;
+  height: 100%;
+  padding: var(--s-16);
+  border: 0;
+  border-radius: var(--r-16);
+  background: var(--surface);
+  box-shadow: var(--ring);
+  text-align: left;
+  transition: transform var(--t-200) var(--ease), box-shadow var(--t-200) var(--ease);
+}
+
+.dcard:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--ring-strong);
+}
+
+/* 进行中：追光色描边 */
+.dcard.is-live {
+  gap: var(--s-16);
+  padding: var(--s-24);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.45);
+}
+
+.dcard.is-live:hover {
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.8);
+}
+
+.dcard-top {
+  display: flex;
+  align-items: center;
+  gap: var(--s-8);
+  font-size: var(--fs-12);
+}
+
+.dcard-live {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-8);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.dcard-status,
+.dcard-tag {
+  color: var(--text-2);
+}
+
+.dcard-tag::before {
+  content: '·';
+  margin-right: var(--s-8);
+}
+
+.dcard-time {
+  margin-left: auto;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+}
+
+.dcard-topic {
+  font-size: var(--fs-16);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.dcard.is-live .dcard-topic {
+  font-size: var(--fs-20);
+}
+
+/* 最新一句发言：大字号，最多三行 */
+.dcard-quote {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  font-size: var(--fs-20);
+  line-height: 1.6;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.dcard-quote::before {
+  content: '“';
+  color: var(--text-2);
+}
+
+.dcard-quote::after {
+  content: '”';
+  color: var(--text-2);
+}
+
+.dcard-note {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: var(--fs-14);
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.dcard-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-8);
+  margin-top: auto;
+}
+
+.dcard-guests {
+  display: inline-flex;
+}
+
+.dcard-guests .avatar + .avatar {
+  margin-left: -4px;
+}
+
+.dcard-guests .avatar {
+  box-shadow: inset 0 0 0 1.5px var(--c), 0 0 0 2px var(--surface);
+}
+
+.dcard-count {
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
