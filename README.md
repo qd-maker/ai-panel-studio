@@ -14,7 +14,7 @@
 
 ## 线上演示
 
-https://roundtable.heyqi.xyz ，访问密码 `***`。演示站调用真实的 DeepSeek，为保护额度：同时只进行 1 场讨论，每天最多开始 20 场。
+https://roundtable.heyqi.xyz （需要访问密码，请联系作者获取）。演示站调用真实的 DeepSeek，为保护额度：同时只进行 1 场讨论，每天最多开始 20 场。
 
 ## 快速开始
 
