@@ -13,6 +13,14 @@ services:
       DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
       TURN_DELAY_S: ${TURN_DELAY_S:-1.5}
       MAX_EXPERT_TURNS: ${MAX_EXPERT_TURNS:-12}
+      MAX_RUNNING: ${MAX_RUNNING:-3}
+      # 访问保护：设置 APP_PASSWORD 后进站要输密码；每日上限保护 API 额度（0 表示不限）
+      APP_PASSWORD: ${APP_PASSWORD:-}
+      APP_SECRET: ${APP_SECRET:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      MAX_STARTS_PER_DAY: ${MAX_STARTS_PER_DAY:-0}
+      MAX_CREATES_PER_DAY: ${MAX_CREATES_PER_DAY:-0}
+      SSE_MAX_STREAM_S: ${SSE_MAX_STREAM_S:-0}
     volumes:
       - panel-data:/data
     restart: unless-stopped

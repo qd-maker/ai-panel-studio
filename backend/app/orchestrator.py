@@ -44,6 +44,9 @@ class Runner:
             d = repo.get_discussion(conn, did)
             if not d:
                 raise NOT_FOUND()
+            cap = app.state.settings.max_starts_per_day
+            if d["status"] == "lineup_ready" and cap and repo.count_today(conn, "started_at") >= cap:
+                raise ApiError(429, "DAILY_LIMIT_REACHED", f"今天已进行 {cap} 场讨论，达到演示站的每日上限，请明天再来")
             if d["status"] == "lineup_ready" and repo.count_live(conn) >= app.state.settings.max_running:
                 raise ApiError(429, "TOO_MANY_RUNNING", f"同时进行的讨论已达 {app.state.settings.max_running} 场，请稍后再试")
             # 条件更新：并发的两次 start 只有一次能把 lineup_ready 改成 running

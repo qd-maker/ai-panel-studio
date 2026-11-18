@@ -38,6 +38,9 @@
 | 502 | LLM_UNAVAILABLE | 模型服务调用失败或超时，重试后仍未成功 |
 | 502 | LLM_BAD_OUTPUT | 模型输出没有通过校验，重试后仍未成功 |
 | 500 | INTERNAL_ERROR | 其他未预期的错误 |
+| 401 | UNAUTHORIZED | 启用了访问密码，但请求没有带有效的登录 Cookie，或密码不正确 |
+| 429 | TOO_MANY_ATTEMPTS | 同一 IP 10 分钟内输错密码 5 次，暂时锁定 |
+| 429 | DAILY_LIMIT_REACHED | 当天发起或开始的讨论达到上限（`MAX_CREATES_PER_DAY` / `MAX_STARTS_PER_DAY`），用来保护模型额度 |
 
 超时也归入 502 `LLM_UNAVAILABLE`，不单独使用 504。前端对超时和其他上游失败的处理相同，都提示用户稍后重试。具体原因（超时、限流、连接失败）写入 `internal` 的 `llm.call` 事件，供排查使用。
 
@@ -171,6 +174,17 @@
 | GET | /api/discussions/{id} | 讨论详情，用于中途加入 |
 | GET | /api/discussions/{id}/stream | SSE 实时事件流 |
 | GET | /api/health | 健康检查（补充接口） |
+| GET | /api/auth/status | 是否需要登录、当前是否已登录（补充接口） |
+| POST | /api/auth/login | 用访问密码登录，成功后写入 HttpOnly Cookie（补充接口） |
+| POST | /api/auth/logout | 退出登录（补充接口） |
+
+### 访问保护（线上演示用）
+
+后端设置了环境变量 `APP_PASSWORD` 时启用，未设置时所有接口照常开放（本地开发、测试）。
+
+- 登录：`POST /api/auth/login`，请求体 `{"password": "..."}`。成功返回 `{"ok": true}` 并写入名为 `aps_session` 的签名 Cookie（HttpOnly、SameSite=Lax、有效期 7 天，线上设置 `COOKIE_SECURE=true`）。密码错误返回 401 `UNAUTHORIZED`；同一 IP 10 分钟内错 5 次返回 429 `TOO_MANY_ATTEMPTS`。
+- 除 `/api/health` 和 `/api/auth/*` 外，所有 `/api` 请求都要带有效 Cookie，否则返回 401 `UNAUTHORIZED`。SSE 接口同样受保护，浏览器的 `EventSource` 会自动带上同源 Cookie。
+- `GET /api/auth/status` 返回 `{"required": bool, "authenticated": bool}`，前端据此决定是否显示登录页。
 
 ### POST /api/discussions
 

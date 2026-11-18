@@ -61,6 +61,11 @@ npm run dev
 | `MAX_EXPERT_TURNS` | `12` | 专家发言轮数上限，达到后进入总结 |
 | `MAX_RUNNING` | `3` | 同时进行的讨论数上限，超出返回 429 |
 | `SSE_MAX_STREAM_S` | `0` | 单条 SSE 连接最长存活秒数，到时服务端断开，浏览器带 `Last-Event-ID` 续传；0 表示不限制 |
+| `APP_PASSWORD` | 无 | 设置后进站要输访问密码（线上演示用），未设置时不启用 |
+| `APP_SECRET` | 随机 | 签名登录 Cookie 的密钥；不设置时每次启动随机生成，重启后需重新登录 |
+| `COOKIE_SECURE` | `false` | 线上走 HTTPS 时设为 `true` |
+| `MAX_STARTS_PER_DAY` | `0` | 每天最多开始几场讨论，0 表示不限；超出返回 429，保护模型额度 |
+| `MAX_CREATES_PER_DAY` | `0` | 每天最多发起几场讨论，0 表示不限 |
 | `APS_DATABASE_URL` | `sqlite:///backend/data/app.db` | SQLite 数据库地址 |
 | `API_TARGET` | `http://127.0.0.1:8000` | 仅前端开发服务器使用：`/api` 转发的目标 |
 

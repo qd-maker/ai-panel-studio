@@ -29,6 +29,9 @@ export type ErrorCode =
   | 'LLM_UNAVAILABLE'
   | 'LLM_BAD_OUTPUT'
   | 'INTERNAL_ERROR'
+  | 'UNAUTHORIZED'
+  | 'TOO_MANY_ATTEMPTS'
+  | 'DAILY_LIMIT_REACHED'
 
 export interface ApiError {
   code: ErrorCode

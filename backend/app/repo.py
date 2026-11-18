@@ -87,6 +87,13 @@ def get_discussion(conn: Connection, did: str) -> dict | None:
     return _one(conn, "SELECT * FROM discussion WHERE id = :d", d=did)
 
 
+def count_today(conn: Connection, column: str) -> int:
+    """今天（UTC 日期）created_at 或 started_at 落在当天的讨论数，用于每日用量封顶。"""
+    assert column in ("created_at", "started_at")
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return int(_one(conn, f"SELECT COUNT(*) AS n FROM discussion WHERE {column} LIKE :d AND is_seed = 0", d=f"{today}%")["n"])
+
+
 def count_live(conn: Connection) -> int:
     return int(_one(conn, "SELECT COUNT(*) AS n FROM discussion WHERE status IN ('running', 'summarizing')")["n"])
 

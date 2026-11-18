@@ -57,7 +57,10 @@ async def _generate_into(request: Request, did: str, topic: str, expert_count: i
 @router.post("/discussions", status_code=201, response_model=schemas.DiscussionDetail)
 async def create_discussion(body: schemas.CreateDiscussionRequest, request: Request):
     app = request.app
+    cap = app.state.settings.max_creates_per_day
     with app.state.engine.begin() as conn:
+        if cap and repo.count_today(conn, "created_at") >= cap:
+            raise ApiError(429, "DAILY_LIMIT_REACHED", f"今天已发起 {cap} 场讨论，达到演示站的每日上限，请明天再来")
         did = repo.create_discussion(conn, body.topic, body.expert_count, app.state.settings.max_expert_turns)
     async with _lock(request, did):
         await _generate_into(request, did, body.topic, body.expert_count, keep_status=False)

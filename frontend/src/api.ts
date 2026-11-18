@@ -31,6 +31,8 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     throw new ApiFailure(0, 'INTERNAL_ERROR', '无法连接服务器，请检查网络', null)
   }
   const body = await res.json().catch(() => null)
+  // 登录过期或未登录：通知外壳切到登录页
+  if (res.status === 401 && !path.startsWith('/auth/')) window.dispatchEvent(new Event('aps:unauthorized'))
   if (!res.ok) {
     throw new ApiFailure(res.status, body?.code ?? 'INTERNAL_ERROR', body?.message ?? '请求失败', body?.details ?? null)
   }
@@ -41,6 +43,8 @@ const post = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) })
 
 export const api = {
+  authStatus: () => request<{ required: boolean; authenticated: boolean }>('/auth/status'),
+  login: (password: string) => post<{ ok: boolean }>('/auth/login', { password }),
   list: () => request<DiscussionListResponse>('/discussions'),
   detail: (id: string) => request<DiscussionDetail>(`/discussions/${id}`),
   create: (req: CreateDiscussionRequest) => post<DiscussionDetail>('/discussions', req),

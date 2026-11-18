@@ -30,6 +30,13 @@ class Settings(BaseModel):
     # 用来避开反向代理的长连接超时；0 表示不限制
     sse_max_stream_s: float = Field(default=0, ge=0)
 
+    # 访问保护（线上演示用）。APP_PASSWORD 为空时不启用登录
+    app_password: str = ""
+    app_secret: str = ""  # 签名 Cookie 的密钥；为空时每次启动随机生成（重启后需重新登录）
+    cookie_secure: bool = False  # 线上走 HTTPS 时设为 true
+    max_starts_per_day: int = Field(default=0, ge=0)  # 每天最多开始几场讨论（按 UTC 日期），0 表示不限
+    max_creates_per_day: int = Field(default=0, ge=0)  # 每天最多发起几场讨论，0 表示不限
+
     @classmethod
     def from_env(cls) -> "Settings":
         env = os.environ
@@ -41,6 +48,11 @@ class Settings(BaseModel):
             "max_expert_turns": "MAX_EXPERT_TURNS",
             "max_running": "MAX_RUNNING",
             "sse_max_stream_s": "SSE_MAX_STREAM_S",
+            "app_password": "APP_PASSWORD",
+            "app_secret": "APP_SECRET",
+            "cookie_secure": "COOKIE_SECURE",
+            "max_starts_per_day": "MAX_STARTS_PER_DAY",
+            "max_creates_per_day": "MAX_CREATES_PER_DAY",
         }.items():
             if var in env:
                 values[field] = env[var]

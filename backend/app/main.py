@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from sqlalchemy import Engine
 
-from app import api, errors
+from app import api, auth, errors
 from app.bus import EventBus
 from app.config import Settings
 from app.db import get_engine
@@ -43,5 +43,6 @@ def create_app(*, engine: Engine | None = None, llm: LLMClient | None = None, se
     app.state.runner = Runner(app)
 
     errors.install(app)
+    auth.install(app)
     app.include_router(api.router)
     return app

@@ -1,0 +1,71 @@
+.login {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: var(--s-16);
+  background: radial-gradient(50% 60% at 50% 0%, rgba(var(--accent-rgb), 0.1), transparent 70%);
+}
+
+/* 唯一一层闭合边框：卡片；里面的输入框用填充区分 */
+.login-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-12);
+  width: min(100%, 400px);
+  padding: var(--s-32) var(--s-24);
+  border-radius: var(--r-16);
+  background: var(--surface);
+  box-shadow: var(--ring);
+}
+
+.login-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--r-full);
+  background: var(--accent);
+  box-shadow: 0 0 24px rgba(var(--accent-rgb), 0.6);
+}
+
+.login-title {
+  font-size: var(--fs-24);
+  font-weight: 600;
+}
+
+.login-lead {
+  margin-bottom: var(--s-8);
+  color: var(--text-2);
+  font-size: var(--fs-14);
+}
+
+.login-label {
+  color: var(--text-2);
+  font-size: var(--fs-12);
+}
+
+.login-input {
+  height: 44px;
+  padding: 0 var(--s-12);
+  border: 0;
+  border-radius: var(--r-8);
+  background: var(--fill-strong);
+  color: var(--text);
+  font: inherit;
+  font-size: var(--fs-16);
+  outline: none;
+  transition: box-shadow var(--t-200) var(--ease);
+}
+
+.login-input:focus {
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.login-error {
+  color: var(--text);
+  font-size: var(--fs-14);
+}
+
+.login-submit {
+  justify-content: center;
+  height: 44px;
+  margin-top: var(--s-8);
+}
