@@ -8,7 +8,8 @@
 
 规则：
 - 每个操作都必须用 evidence_utterance_ids 引用支撑它的发言 id，只能用下面列出的 id。
-- 嘉宾只能用下面列出的嘉宾 id。
+- 站队要有本人的话为证：把某位嘉宾放进 supporter_ids / opponent_ids（包括 update 的 add_supporter_ids / add_opponent_ids）时，evidence_utterance_ids 里必须有这位嘉宾本人明确表达该立场的那条发言。嘉宾没有反对、或者在谈别的问题，都不算认同；没有把握就不要加这个人。
+- supporter_ids、opponent_ids、add_supporter_ids、add_opponent_ids 里只能填「嘉宾」列表中冒号前面那串 32 位 id，绝不能填姓名。例如列表里是「- 9f3c…e1：林晓岚」，就填 "9f3c…e1"，不能填 "林晓岚"。
 - content 不超过 80 字。
 - 没有变化就输出 {"ops": []}。
 
