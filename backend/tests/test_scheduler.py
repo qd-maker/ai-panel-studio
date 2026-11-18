@@ -142,6 +142,22 @@ async def test_clamp_sentences_keeps_at_most_two(raw, expected):
     assert load("app.textutil").clamp_sentences(raw, max_sentences=2) == expected
 
 
+@pytest.mark.parametrize(
+    "raw",
+    [
+        # 真实 DeepSeek 输出：只有 2 句，但 133 字，超过数据库 120 字上限（live run 时讨论因此崩溃）
+        "两条路其实都在变窄，但性质不一样——企业设“AI协作经验”门槛，是把本该自己承担的培养成本转嫁成新人的准入壁垒；"
+        "而学校项目、开源社区这些替代路径本身也在被AI工具拉平，刷题和做小项目已经证明不了协作能力了。"
+        "所以问题不是新人该不该另找路，而是这些路被谁、按什么规则收窄的。",
+        "一" * 300,
+    ],
+)
+async def test_long_real_world_utterance_fits_120_chars_and_two_sentences(raw):
+    out = load("app.textutil").fit_utterance(raw)
+    assert 0 < len(out) <= 120
+    assert len(re.findall(r"[。！？!?]", out)) <= 2
+
+
 async def test_speaking_intents_are_written_only_as_internal_events(make_app, engine):
     app, _ = make_app()
     async with api(app) as client:

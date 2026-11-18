@@ -20,6 +20,27 @@ def clamp_sentences(text: str, max_sentences: int = 2) -> str:
     return text
 
 
+MAX_UTTERANCE_CHARS = 120
+SOFT_BREAK = re.compile(r"[，；、,;：:——]")
+
+
+def fit_utterance(text: str, max_sentences: int = 2, max_chars: int = MAX_UTTERANCE_CHARS) -> str:
+    """发言同时满足「最多 2 句」和「最多 120 字」（数据库约束）。
+
+    先截句；仍超长时只留第一句；第一句本身超长时，在上限内最后一个逗号、分号处截断并补句号。
+    真实模型偶尔会写出两句但很长的发言，只截句不够。
+    """
+    out = clamp_sentences(text, max_sentences)
+    if len(out) <= max_chars:
+        return out
+    first = clamp_sentences(out, 1)
+    if len(first) <= max_chars:
+        return first
+    head = first[: max_chars - 1]
+    cut = max((m.start() for m in SOFT_BREAK.finditer(head)), default=-1)
+    return (head[:cut] if cut > max_chars // 2 else head).rstrip("，；、,;：: ") + "。"
+
+
 def strip_fence(text: str) -> str:
     m = FENCE.match(text)
     return m.group(1) if m else text.strip()

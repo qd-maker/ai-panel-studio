@@ -27,7 +27,7 @@ from app.llm import LLMBadOutput, complete_structured, complete_text
 from app.llm_base import LLMError
 from app.prompts import render
 from app.scheduler import ExpertIntent, pick_speaker, trailing_run
-from app.textutil import clamp_sentences, to_plain_summary
+from app.textutil import fit_utterance, to_plain_summary
 
 HOST_TASKS = {
     "opening": "开场：用一句话介绍话题的争议点，再请嘉宾亮明观点。",
@@ -143,7 +143,7 @@ class Discussion:
                 hints={"act": act, "turn": self.expert_turns, "addressed_id": addressed["id"] if addressed else None},
                 retries=self.settings.llm_retries, log=log,
             )
-            content = clamp_sentences(raw) or HOST_FALLBACK[act].replace("$target", target)
+            content = fit_utterance(raw) or HOST_FALLBACK[act].replace("$target", target)
         except LLMError:
             # 主持人的串场话可以用模板兜底，讨论不因为一句串场失败而中断
             content = HOST_FALLBACK[act].replace("$target", target)
@@ -221,7 +221,7 @@ class Discussion:
                 hints={"speaker_id": pid, "turn": self.expert_turns},
                 retries=self.settings.llm_retries, log=log,
             )
-            content = clamp_sentences(raw)
+            content = fit_utterance(raw)
         except LLMError:
             content = ""
 
