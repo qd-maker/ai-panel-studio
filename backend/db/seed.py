@@ -20,10 +20,7 @@ from sqlalchemy import Connection, Engine, text
 from app import schemas
 from app.db import get_engine
 
-# 嘉宾专属色只用于头像圈和姓名文字，所以每个颜色在深色表面 #16191E 上都要 ≥ 4.5:1（实测 7.6 以上），
-# 并且避开黄橙色，不和界面唯一的强调色（追光 #F5B841）混淆。
-HOST_COLOR = "#C3C9D2"
-EXPERT_COLORS = ["#FF8A6B", "#5CC8F0", "#6FD6A6", "#B7A3FF", "#F58FB8", "#B8DB6B"]
+from app.palette import EXPERT_COLORS, HOST_COLOR  # noqa: E402  与线上生成用同一份色板
 BASE_TIME = datetime(2026, 11, 15, 9, 0, tzinfo=timezone.utc)
 
 
