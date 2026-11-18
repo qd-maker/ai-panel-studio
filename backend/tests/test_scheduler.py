@@ -158,6 +158,42 @@ async def test_long_real_world_utterance_fits_120_chars_and_two_sentences(raw):
     assert len(re.findall(r"[。！？!?]", out)) <= 2
 
 
+PEOPLE = {"p-lin": "林晓岚", "p-zhao": "赵一鸣", "p-sun": "孙可盈", "p-chen": "陈远舟"}
+
+
+@pytest.mark.parametrize(
+    ("me", "raw", "expected_text", "expected_target"),
+    [
+        # 真实运行：赵一鸣开口点名孙可盈，意图里的 target 却是林晓岚，「→ 姓名」显示错人
+        ("赵一鸣", "可盈，导师带教确实不均这我认。", "可盈，导师带教确实不均这我认。", "p-sun"),
+        ("林晓岚", "一鸣说“岗位还在”，可门槛抬高本身就是压缩。", None, None),  # 引用不是点名
+        ("林晓岚", "陈老师，结构挪动的前提是总量守恒。", None, "p-chen"),
+        # 真实运行：模型在发言前加了自己的名字
+        ("陈远舟", "远舟：被筛掉的那批人确实没进来。", "被筛掉的那批人确实没进来。", None),
+        ("孙可盈", "我同意这个判断。", None, None),
+    ],
+)
+async def test_tidy_utterance_strips_own_name_and_detects_who_is_addressed(me, raw, expected_text, expected_target):
+    others = {k: v for k, v in PEOPLE.items() if v != me}
+    text, target = load("app.textutil").tidy_utterance(raw, me, others)
+    assert text == (expected_text or raw)
+    assert target == expected_target
+
+
+@pytest.mark.parametrize(
+    "thought",
+    [
+        # 真实运行里被硬截成半句的摘要
+        "孙总说的项目组缩编我信，但省下的人头没流回入口，恰恰说明企业把培养成本转嫁了，而不是岗位本身消失。我教了二十年书，见过太多次",
+        "一" * 80,
+    ],
+)
+async def test_public_thought_is_cut_at_punctuation_not_mid_sentence(thought):
+    s = load("app.scheduler").ExpertIntent(participant_id="p", urgency=3, public_thought=thought)
+    assert len(s.public_thought) <= 60
+    assert s.public_thought[-1] in "。！？…"
+
+
 async def test_speaking_intents_are_written_only_as_internal_events(make_app, engine):
     app, _ = make_app()
     async with api(app) as client:

@@ -27,7 +27,7 @@ from app.llm import LLMBadOutput, complete_structured, complete_text
 from app.llm_base import LLMError
 from app.prompts import render
 from app.scheduler import ExpertIntent, pick_speaker, trailing_run
-from app.textutil import fit_utterance, to_plain_summary
+from app.textutil import fit_utterance, tidy_utterance, to_plain_summary
 
 HOST_TASKS = {
     "opening": "开场：用一句话介绍话题的争议点，再请嘉宾亮明观点。",
@@ -221,7 +221,12 @@ class Discussion:
                 hints={"speaker_id": pid, "turn": self.expert_turns},
                 retries=self.settings.llm_retries, log=log,
             )
-            content = fit_utterance(raw)
+            content, mentioned = self._tidy(pid, fit_utterance(raw))
+            # 「→ 被回应人」以发言实际点名的人为准：模型意图里的 target 有时和它真正开口对着的人不一致
+            if mentioned and not answering:
+                ref = next((u for u in reversed(self.utts) if u["participant_id"] == mentioned), None)
+                if ref:
+                    reply_to = ref["id"]
         except LLMError:
             content = ""
 
@@ -242,6 +247,10 @@ class Discussion:
         self.utts.append(utt)
         await self.extract()
         return True
+
+    def _tidy(self, pid: str, content: str) -> tuple[str, str | None]:
+        others = {p["id"]: p["name"] for p in self.by_id.values() if p["id"] != pid}
+        return tidy_utterance(content, self.by_id[pid]["name"], others)
 
     def _act_for(self, pid: str, intent: ExpertIntent | None, answering: dict | None) -> tuple[str, int | None, str | None]:
         """发言性质和回应对象。act 只供调度和提炼使用，Transcript 只显示「→ 姓名」。"""

@@ -18,8 +18,22 @@ from app.schemas import PublicViewText
 IntentKind = Literal["raise_hand", "interrupt", "supplement", "rebut"]
 
 
+_CUT = "。！？；，、"
+
+
 def _truncate(n: int):
-    return lambda v: v[:n] if isinstance(v, str) else v
+    """超长时在上限内最后一个标点处截断，避免小窗里出现半句话；找不到合适的标点就加省略号。"""
+
+    def cut(v):
+        if not isinstance(v, str) or len(v) <= n:
+            return v
+        head = v[: n - 1]
+        pos = max(head.rfind(c) for c in _CUT)
+        if pos >= n // 2:
+            return head[:pos] + ("。" if head[pos] in "，、；" else head[pos])
+        return head + "…"
+
+    return cut
 
 
 class ExpertIntent(BaseModel):

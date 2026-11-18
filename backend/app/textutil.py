@@ -41,6 +41,30 @@ def fit_utterance(text: str, max_sentences: int = 2, max_chars: int = MAX_UTTERA
     return (head[:cut] if cut > max_chars // 2 else head).rstrip("，；、,;：: ") + "。"
 
 
+_CALL_END = "，,、：:！!"
+
+
+def _aliases(name: str) -> list[str]:
+    """嘉宾在发言里可能被怎么称呼：全名、名字（去姓）、「X 老师 / X 总 / X 主任 / X 教授」。"""
+    if len(name) < 2:
+        return [name]
+    return [name, name[1:], *(f"{name[0]}{t}" for t in ("老师", "总", "主任", "教授"))]
+
+
+def tidy_utterance(content: str, me: str, others: dict[str, str]) -> tuple[str, str | None]:
+    """去掉模型自己加的「本人姓名：」前缀，并识别开头点名的嘉宾，返回 (发言, 被点名者 id)。"""
+    for alias in (me, me[1:]):
+        if alias and content.startswith((f"{alias}：", f"{alias}:")):
+            content = content[len(alias) + 1:].lstrip()
+            break
+    head = content[:12]
+    for pid, name in others.items():
+        for a in _aliases(name):
+            if head.startswith(a) and len(head) > len(a) and head[len(a)] in _CALL_END:
+                return content, pid
+    return content, None
+
+
 def strip_fence(text: str) -> str:
     m = FENCE.match(text)
     return m.group(1) if m else text.strip()
