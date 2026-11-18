@@ -8,6 +8,10 @@
 
 截图来自一场真实的 DeepSeek 讨论（话题：生成式 AI 会让初级程序员岗位消失吗）。
 
+## 线上演示
+
+https://roundtable.heyqi.xyz （需要访问密码，向作者索取）。演示站调用真实的 DeepSeek，为保护额度：同时只进行 1 场讨论，每天最多开始 20 场。
+
 ## 快速开始
 
 ### 方式一：Docker（一条命令）
@@ -101,7 +105,7 @@ npm run dev
 ## 测试
 
 ```bash
-# 后端：64 个测试，LLM_MODE=mock 下运行
+# 后端：77 个测试，LLM_MODE=mock 下运行
 cd backend
 .venv\Scripts\python -m pytest
 
@@ -138,6 +142,14 @@ cd backend
 | 中文响应式、页面不滚动 | 三档布局：≥1600 三栏、1024～1599 席位条在上加两栏、<1024 标签切换 | E2E 三种视口 |
 
 作业中的 9 条禁止项及对应测试见 [docs/PRD.md](docs/PRD.md)「验收标准：禁止项」。
+
+## 部署
+
+`deploy/` 下是演示站的部署配置：前端 nginx 容器接入已有的 Cloudflare 隧道网络，后端只在项目内网。服务器上的 `.env`（模型 Key、访问密码、每日上限）权限 600，不进仓库。更新演示站：
+
+```bash
+bash deploy/deploy.sh    # 本地跑后端测试 → 上传当前提交 → 备份数据库 → 重建容器 → 健康检查
+```
 
 ## 后续改进
 

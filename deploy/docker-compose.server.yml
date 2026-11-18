@@ -1,4 +1,4 @@
-# 线上演示站（panel.heyqi.xyz）的部署配置。
+# 线上演示站（roundtable.heyqi.xyz）的部署配置。
 # 前端 nginx 容器名 panel，接入 SpeakLoop 的 Cloudflare 隧道网络 speakloop_default，
 # 隧道的 Public Hostname 指向 http://panel:80。后端只在本项目内网，不对外暴露。
 # 密钥和密码在同目录的 .env（chmod 600，不进仓库），变量说明见 backend/.env.example。
