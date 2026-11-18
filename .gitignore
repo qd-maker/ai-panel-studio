@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# 本地数据与密钥
+backend/data/
+*.db
+*.db-wal
+*.db-shm
+.env
+
+# Node
+node_modules/
+dist/
