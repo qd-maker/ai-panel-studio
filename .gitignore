@@ -19,3 +19,6 @@ dist/
 e2e/.tmp/
 e2e/test-results/
 e2e/playwright-report/
+
+# 演示视频的音效中间文件，可用 docs/media/src/score.py 重新生成
+docs/media/src/sfx.wav

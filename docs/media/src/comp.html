@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<!-- AI Panel Studio · 「一束追光贯穿全片」 · onetake composition. Every value is a pure function of t (seconds).
+     Contract: window.__seek(t) → Promise, window.__ready, window.__meta, __track (screen boxes), __motion, __events.
+     Query: ?play (real time loop) · ?t=6.4&hud (pin a frame). Beat sheet: README.md next to this file. -->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AI 圆桌演播厅 · demo</title>
+<style>
+:root{ --ground:#0b0d10; --deep:#07080a; --card:#16191e; --line:#23272d; --mute:#9ba3ae; --ink:#eceef1; --accent:#f5b841;
+  --text:'Microsoft YaHei',sans-serif; --display:'Microsoft YaHei',sans-serif; --mono:Consolas,monospace;
+  --hairline:rgba(236,238,241,.08); --hairline2:rgba(236,238,241,.14); }
+html,body{margin:0;width:1920px;height:1080px;overflow:hidden;background:var(--ground)}
+body{font-family:var(--text);color:var(--ink);-webkit-font-smoothing:antialiased;font-kerning:normal}
+#stage{position:absolute;inset:0;overflow:hidden;background:var(--ground)}
+canvas.full{position:absolute;left:0;top:0;width:1920px;height:1080px}
+#world{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0}
+.a{position:absolute;left:0;top:0;transform-origin:0 0;white-space:nowrap}
+.av{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;color:var(--ink);background:var(--ground)}
+/* input → header */
+#box{position:absolute;box-sizing:border-box;background:var(--card)}
+#box .hint{position:absolute;left:40px;top:96px;font-size:17px;color:var(--mute);white-space:nowrap}
+#box .hint b{color:var(--ink);font-weight:600;margin:0 10px;font-family:var(--mono)}
+#box .cnt{position:absolute;right:220px;top:98px;font:15px var(--mono);color:var(--mute)}
+#box .btn{position:absolute;right:28px;top:84px;height:46px;padding:0 24px;border-radius:8px;background:#262a31;color:var(--ink);font-size:17px;font-weight:600;line-height:46px;white-space:nowrap}
+#topic{font-size:56px;font-weight:700;line-height:1.2;color:var(--ink)}
+/* header right */
+#tabs{font-size:18px;color:var(--mute)} #tabs span{display:inline-block;margin-left:26px;padding-bottom:6px;border-bottom:2px solid transparent}
+#tabs span.on{color:var(--ink);border-bottom-color:var(--ink)}
+#turns{font:17px var(--mono);color:var(--mute)} #turns i{display:inline-block;width:110px;height:3px;border-radius:2px;background:var(--hairline2);vertical-align:4px;margin-left:12px;position:relative;overflow:hidden}
+#turns i b{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+/* seat bar */
+.panel{position:absolute;background:var(--card);border-radius:16px}
+.seat{position:absolute;top:120px;width:364.8px;height:130px;border-radius:16px}
+.seat .av{width:56px;height:56px;font-size:22px}
+.seat .nm{position:absolute;font-size:22px;font-weight:600;white-space:nowrap}
+.seat .tt{position:absolute;font-size:15px;color:var(--mute);white-space:nowrap}
+.seat .st{position:absolute;right:22px;top:36px;font-size:15px;color:var(--mute);white-space:nowrap}
+.seat .st .d{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--mute);opacity:.6;margin-right:7px;vertical-align:2px}
+.seat .st.on{color:var(--accent);font-weight:600}
+.seat .st.on .d{background:var(--accent);opacity:1}
+.seat .fo{position:absolute;left:20px;top:94px;font-size:14px;color:var(--mute);white-space:nowrap}
+.seat .fo b{color:var(--ink);font-weight:500;margin-left:8px}
+#hostlines{position:absolute;top:132px;height:106px;border-left:1px solid var(--hairline);border-right:1px solid var(--hairline)}
+/* stage */
+#glow{position:absolute;left:50px;top:262px;width:1300px;height:420px;background:radial-gradient(55% 100% at 50% 0%,rgba(245,184,65,.13),rgba(245,184,65,0) 72%)}
+.sav{width:88px;height:88px;font-size:34px}
+.stx .n{font-size:36px;font-weight:700;line-height:1.2}
+.stx .s{font-size:18px;color:var(--mute);margin-top:4px}
+.stx .s b{color:var(--ink);font-weight:500}
+.cap{width:1180px;font-size:46px;font-weight:500;line-height:1.45;text-align:center;white-space:normal;text-wrap:balance;transform-origin:590px 0;padding:0 60px;box-sizing:border-box}
+.cap .g{color:transparent}
+.cap i{display:inline-block;width:4px;height:.86em;margin:0 2px 0 4px;vertical-align:-.1em;background:var(--accent);box-shadow:0 0 14px rgba(245,184,65,.6)}
+#divider{position:absolute;left:48px;top:668px;width:1304px;height:1px;background:var(--hairline)}
+.row{width:900px}
+.row .av{width:34px;height:34px;font-size:15px;left:0;top:0}
+.row .h{position:absolute;left:52px;top:4px;font-size:17px;white-space:nowrap}
+.row .h b{font-weight:600;margin-right:10px} .row .h span{color:var(--mute);font-size:15px}
+.row .h em{position:absolute;left:820px;font:normal 14px var(--mono);color:var(--mute)}
+.row .x{position:absolute;left:52px;top:38px;width:860px;font-size:21px;line-height:1.6;white-space:normal}
+/* right column */
+.rh{font-size:24px;font-weight:700} .rh small{font:16px var(--mono);color:var(--mute);margin-left:10px;font-weight:400}
+.rm{font-size:17px;color:var(--mute)}
+.dv{font-size:18px;color:var(--ink)}
+.lab{font-size:14px;color:var(--mute)}
+.tick{position:absolute;width:2px;height:12px;border-radius:2px;background:var(--hairline2)}
+.spav{width:32px;height:32px;font-size:14px}
+/* summary */
+#sumlab{font-size:18px;color:var(--mute)}
+#stats{font-size:17px;color:var(--mute)} #stats .it{display:inline-block;margin-right:44px}
+#stats .it b{font:500 30px var(--mono);color:var(--ink);margin:0 4px 0 10px}
+#sumdiv{position:absolute;left:240px;top:1604px;width:1440px;height:1px;background:var(--hairline)}
+#para{width:1060px;height:152px;overflow:hidden;font-size:28px;line-height:1.8;white-space:normal;color:var(--ink);
+  -webkit-mask-image:linear-gradient(180deg,#000 62%,rgba(0,0,0,.25) 100%)}
+#para .dc{float:left;font-size:92px;line-height:1;font-weight:700;margin:6px 18px 0 0}
+#para .r{color:var(--mute)}
+/* end card */
+#wm{font-size:96px;font-weight:700;line-height:1.2;letter-spacing:.02em}
+#wm span{display:inline-block;transform-origin:50% 88%}
+#wmsub{font:24px var(--mono);letter-spacing:.24em;color:var(--mute)}
+/* the light */
+.lt{position:absolute;left:0;top:0}
+#pool{position:absolute;left:0;top:0;width:360px;height:360px;border-radius:50%;background:radial-gradient(closest-side,rgba(245,184,65,.16),rgba(245,184,65,0))}
+#trails{position:absolute;left:0;top:0;overflow:visible}
+#hud{position:absolute;right:14px;bottom:10px;font:14px Consolas,monospace;color:#f55;display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="bg" class="full" width="1920" height="1080"></canvas>
+  <div id="world">
+    <div id="studio">
+      <div id="tabs" class="a" data-k="tabs"></div>
+      <div id="turns" class="a" data-k="turns"></div>
+      <div id="seatbar" class="panel" data-k="seatbar" style="left:48px;top:120px;width:1824px;height:130px"></div>
+      <div id="hostlines"></div>
+      <div id="seats"></div>
+      <div id="glow" data-k="glow"></div>
+      <div id="stagebits"></div>
+      <div id="divider"></div>
+      <div id="rows"></div>
+      <div id="rcol" class="panel" data-k="rcol" style="left:1400px;top:276px;width:472px;height:770px"></div>
+      <div id="rbits"></div>
+    </div>
+    <svg id="trails" width="1920" height="1080" data-k="trails"><path id="trA" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path id="trB" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div id="box" data-k="box"><div class="hint">专家 <b>−</b><b style="margin:0">4</b><b>+</b> 位　　话题 5~200 字</div><div class="cnt" id="cnt">0/200</div><div class="btn" id="btn">生成嘉宾阵容</div></div>
+    <div id="topic" class="a" data-k="topic"></div>
+    <div id="summary">
+      <div id="sumlab" class="a" data-k="sumlab">本场总结</div>
+      <div id="stats" class="a"></div>
+      <div id="sumdiv" data-k="sumdiv"></div>
+      <div id="para" class="a" data-k="para"></div>
+    </div>
+    <div id="wm" class="a" data-k="wm"></div>
+    <div id="wmsub" class="a" data-k="wmsub">AI PANEL STUDIO</div>
+    <div id="pool" data-k="pool"></div>
+    <div id="ld"></div>
+    <div id="light" class="lt" data-k="light"></div>
+  </div>
+  <canvas id="grain" class="full" width="1920" height="1080"></canvas>
+  <div id="hud"></div>
+</div>
+<script src="motion.js"></script>
+<script src="look.js"></script>
+<script>
+// ════════════════════════════════════════ data — a real DeepSeek run ════════════════════════════════════════
+// backend/data/live/after-id-rule/raw.json → detail.participants / utterances / insights / summary (copied, not invented)
+const TOPIC = '生成式 AI 会让初级程序员岗位消失吗';
+const P = {
+  '周': {name:'周衡',   title:'科技访谈节目主持人',       prof:'科技播客主理人',   color:'#C3C9D2', focus:'把争论拉回具体的人'},
+  '林': {name:'林晓岚', title:'某大学经济学院副教授',     prof:'劳动经济学者',     color:'#FF8A6B', focus:'招聘数据'},
+  '陈': {name:'陈远帆', title:'某理工大学计算机学院教授', prof:'软件工程教授',     color:'#5CC8F0', focus:'基本功与真实项目'},
+  '赵': {name:'赵启明', title:'某智库科技政策研究中心主任', prof:'科技政策研究员', color:'#6FD6A6', focus:'政策如何互补'},
+  '孙': {name:'孙维莉', title:'某头部互联网公司研发总监', prof:'互联网公司技术总监', color:'#B7A3FF', focus:'团队真实案例'},
+};
+const SEATS = ['林','陈','周','赵','孙'];                 // SeatBar: host centred, experts by seat number on both sides
+// utterances 2, 3, 4, 6, 9 — long ones shown from a clause boundary (marked ……)
+const U = [
+  {p:'孙', text:'我们团队去年就把基础CRUD和数据清洗类的活交给AI了', time:'12:53:42', tab:0, cps:18},
+  {p:'陈', text:'……恰恰说明工具放大了初级程序员的能力，而不是让这个层级消失', time:'12:53:47', tab:1, cps:20},
+  {p:'林', text:'企业不是让五个初级都变强，而是干脆少招三个。', time:'12:53:53', tab:1, cps:28},
+  {p:'赵', text:'这个缺口得靠政策补。', time:'12:54:04', tab:1, cps:26},
+  {p:'周', text:'减掉的坑和补上的能力，中间隔的到底是什么？', time:'12:54:18', tab:2, cps:15},
+];
+const DIV = [ // insights: two divergences, status emerging (初现)
+  {text:'生成式 AI 正在实质性替代部分初级程序员的工作', sup:['林','孙','赵'], opp:['陈']},
+  {text:'初级岗位减少是结构性挪动而非入口收窄',         sup:['陈'],          opp:['林','孙','赵']},
+];
+const SUM_FIRST = '天讨论围绕生成式 AI 是否会让初级程序员岗位消失展开。';
+const SUM_REST  = '四位嘉宾都承认一线部分初级工作已被 AI 承接，孙维莉提到团队将 CRUD 和数据清洗交给 AI，项目组初级从八人减到三人；林晓岚指出初级研发岗起薪和编制在收缩……';
+const STATS = [['时长','1','分','37','秒'],['发言','17','条'],['专家发言','12','轮'],['共识','0','条'],['分歧','2','条']];
+const WORDMARK = 'AI 圆桌演播厅';
+
+// ════════════════════════════════════════ timeline (seconds) ════════════════════════════════════════
+const DUR = 25, FPS = 30;
+const BOX_IN = 0.95, TYPE0 = 1.15, TYPE_CPS = 10, ENTER = 3.05;
+const LAND_HOST = 3.6, SPLIT0 = 3.64, SPLIT_DT = 0.07, SPLIT_FLY = 0.32, SPLIT_OUT = 4.4;
+const PANELS_IN = 4.62;
+// the light's jumps: [t0, t1, from, to]
+const HOP = [[5.15,5.50,'周','孙'],[7.35,7.70,'孙','陈'],[9.40,9.65,'陈','林'],[10.60,10.85,'林','赵'],[11.40,11.65,'赵','周']];
+const SPEC0 = 14.2, LIGHT_SPEC = [14.3, 15.15], MORPH0 = 14.4, SPAV0 = 15.15;
+const SUM0 = 17.0, LIGHT_SUM = [17.05, 18.3], SUM_IN = 17.75, PARA_IN = 18.35;
+const END0 = 20.8, LIGHT_END = [20.92, 21.6], WM_IN = 21.62, SUB_IN = 22.15;
+window.__meta = {dur: DUR, fps: FPS, w: 1920, h: 1080,
+  inFrame: {light: [0.2, 18.3], dc: [18.3, 20.8, 'whole'], wm: [22.0, 25, 'whole']}};
+
+const {clamp, lerp, seg, sstep, ssstep, spring, ring} = OM, E = OM.ease;
+const $ = id => document.getElementById(id);
+const AMB = '245,184,65';
+
+// ════════════════════════════════════════ build ════════════════════════════════════════
+const SEAT_W = 364.8, seatX0 = i => 48 + i * SEAT_W;
+const seatEls = {}, SEAT_AV = {};          // avatar centres in world, filled in measure()
+SEATS.forEach((k, i) => {
+  const p = P[k], d = document.createElement('div'); d.className = 'seat'; d.dataset.k = 'seat-' + k; d.style.left = seatX0(i) + 'px';
+  d.innerHTML = `<div class="av" style="box-shadow:inset 0 0 0 2.5px ${p.color}">${k}</div><div class="nm" style="color:${p.color}">${p.name}</div>`
+    + `<div class="tt">${k === '周' ? '主持人' : p.title}</div>` + (k === '周' ? '' : `<div class="st"><span class="d"></span><span class="w">待机</span></div><div class="fo">关注<b>${p.focus}</b></div>`);
+  $('seats').appendChild(d); seatEls[k] = d;
+});
+const stageEls = U.map((u, i) => {
+  const p = P[u.p];
+  const av = document.createElement('div'); av.className = 'av sav'; av.dataset.k = 'sav-' + i; av.textContent = u.p;
+  av.style.boxShadow = `inset 0 0 0 3px ${p.color}`;
+  const tx = document.createElement('div'); tx.className = 'a stx'; tx.dataset.k = 'stx-' + i;
+  tx.innerHTML = `<div class="n" style="color:${p.color}">${p.name}</div><div class="s">${p.prof} · ${p.title}</div>`;
+  const cap = document.createElement('div'); cap.className = 'a cap'; cap.dataset.k = 'cap-' + i;
+  $('stagebits').append(av, tx, cap);
+  return {av, tx, cap};
+});
+const rowEls = U.slice(0, 4).map((u, i) => {
+  const p = P[u.p], d = document.createElement('div'); d.className = 'a row'; d.dataset.k = 'row-' + i;
+  d.innerHTML = `<div class="av" style="box-shadow:inset 0 0 0 2px ${p.color}">${u.p}</div><div class="h"><b style="color:${p.color}">${p.name}</b><span>${p.prof} · ${p.title}</span><em>${u.time}</em></div><div class="x">${u.text}</div>`;
+  $('rows').appendChild(d); return d;
+});
+const TABS = ['开场','追问','串联','收尾'];
+$('tabs').innerHTML = TABS.map(s => `<span>${s}</span>`).join('');
+// right column
+const R = {};
+function rb(k, cls, html, x, y) { const d = document.createElement('div'); d.className = 'a ' + cls; d.dataset.k = k; d.innerHTML = html; d.style.left = x + 'px'; d.style.top = y + 'px'; $('rbits').appendChild(d); R[k] = d; return d; }
+rb('ch', 'rh', '共识<small>0</small>', 1432, 304);
+rb('cm', 'rm', '嘉宾们还没有形成共识', 1432, 352);
+rb('dh', 'rh', '分歧<small id="dcount">0</small>', 1432, 412);
+rb('dm', 'rm', '暂未出现明显分歧', 1432, 460);
+const LY = [552, 690], LX0 = 1540, LX1 = 1730, LXC = 1635;
+const SP = [];                       // spectrum avatars
+DIV.forEach((dv, i) => {
+  rb('dv' + i, 'dv', dv.text, 1432, LY[i] - 50);
+  rb('l0' + i, 'lab', '赞成', 1432, LY[i] + 22); rb('l1' + i, 'lab', '初现', LXC - 14, LY[i] + 22); rb('l2' + i, 'lab', '反对', 1802, LY[i] + 22);
+  const tk = document.createElement('div'); tk.className = 'tick'; tk.dataset.k = 'tick' + i; tk.style.left = (LXC - 1) + 'px'; tk.style.top = (LY[i] - 6) + 'px'; $('rbits').appendChild(tk); R['tick' + i] = tk;
+  dv.sup.forEach((k, j) => SP.push({k, line: i, x: LX0 - 28 - j * 28, order: SP.length}));
+  dv.opp.forEach((k, j) => SP.push({k, line: i, x: LX1 + 28 + j * 28, order: SP.length}));
+});
+SP.forEach((s, j) => { const d = document.createElement('div'); d.className = 'av spav'; d.dataset.k = 'spav-' + j; d.textContent = s.k;
+  d.style.boxShadow = `inset 0 0 0 2px ${P[s.k].color}, 0 0 0 2px var(--card)`; d.style.background = 'var(--card)'; $('rbits').appendChild(d); s.el = d; });
+// summary
+$('stats').innerHTML = STATS.map(s => `<span class="it">${s[0]}<b>${s[1]}</b>${s[2]}${s[3] ? `<b>${s[3]}</b>${s[4]}` : ''}</span>`).join('');
+const statEls = [...$('stats').children];
+$('para').innerHTML = `<span class="dc" id="dc" data-k="dc">今</span><span id="pf">${SUM_FIRST}</span><span class="r" id="pr">${SUM_REST}</span>`;
+// wordmark
+const wmL = [...WORDMARK].map(ch => { const s = document.createElement('span'); s.textContent = ch === ' ' ? ' ' : ch; $('wm').appendChild(s); return s; });
+// the light and its four splits
+const LD = ['陈','赵','林','孙'].map((k, j) => { const d = document.createElement('div'); d.className = 'lt'; d.dataset.k = 'ld-' + k; $('ld').appendChild(d); return {k, el: d, j}; });
+
+// ════════════════════════════════════════ measure (after fonts) ════════════════════════════════════════
+let PRE = [], STX = [], DC = null, WM = {}, KEYS = [], TRAIL = [], TRS = [];
+const STAGE_CX = 700, AV_Y = 340, CAP_Y = 410;
+function measure() {
+  $('world').style.transform = 'none';
+  const tp = $('topic');
+  for (let n = 0; n <= TOPIC.length; n++) { tp.textContent = TOPIC.slice(0, n); PRE.push(tp.getBoundingClientRect().width); }
+  // seat insides: experts left-aligned, host centred
+  SEATS.forEach((k, i) => {
+    const d = seatEls[k], av = d.querySelector('.av'), nm = d.querySelector('.nm'), tt = d.querySelector('.tt');
+    let ax = 20;
+    if (k === '周') { const w = Math.max(nm.getBoundingClientRect().width, tt.getBoundingClientRect().width); ax = (SEAT_W - (56 + 14 + w)) / 2; }
+    const ay = k === '周' ? 37 : 22;
+    av.style.left = ax + 'px'; av.style.top = ay + 'px';
+    nm.style.left = (ax + 70) + 'px'; nm.style.top = (ay - 2) + 'px'; tt.style.left = (ax + 70) + 'px'; tt.style.top = (ay + 32) + 'px';
+    SEAT_AV[k] = {x: seatX0(i) + ax + 28, y: 120 + ay + 28};
+  });
+  $('hostlines').style.left = seatX0(2) + 'px'; $('hostlines').style.width = SEAT_W + 'px';
+  STX = stageEls.map(s => { const w = s.tx.getBoundingClientRect().width, left = STAGE_CX - (108 + w) / 2; return {avx: left + 44, txl: left + 108}; });
+  const r = $('dc').getBoundingClientRect(), pr = $('para').getBoundingClientRect();
+  DC = {x: PARA.x + (r.left - pr.left) - 6, y: PARA.y + (r.top - pr.top) + 2, w: r.width + 10, h: 92};
+  const wr = $('wm').getBoundingClientRect(); const gw = 54 + wr.width;
+  WM = {w: wr.width, left: 760 - gw / 2 + 54, top: 1600 - wr.height / 2, h: wr.height};
+  WM.dot = {x: WM.left - 34, y: WM.top + WM.h * 0.52}; WM.cx = 760;
+  const subw = $('wmsub').getBoundingClientRect().width; WM.sub = {x: 760 - subw / 2 + 27, y: WM.top + WM.h + 14};
+  buildCamera(); buildTrails();
+}
+const PARA = {x: 240, y: 1640};
+
+// ════════════════════════════════════════ the light ════════════════════════════════════════
+const HALO = 72;
+function caretX(t) { const n = OM.typeOn(t, TYPE0, TOPIC, {cps: TYPE_CPS}).n; return 400 + PRE[n] * (40 / 56) + 5; }
+const CARET_Y = 504;
+function hopH(a, b) { return 46 + 0.075 * Math.hypot(b.x - a.x, b.y - a.y); }
+function hopPos(t, h) { const A = SEAT_AV[h[2]], B = SEAT_AV[h[3]]; return OM.hop(t, h[0], h[1], A, B, {height: hopH(A, B), curve: E.quintInOut}); }
+// size of a light that leaves at t0 (shrinks to a dot) and lands at t1 (springs open to `big`)
+function travelSize(t, t0, t1, from, big, dot = 16) {
+  if (t < t1) { const k = E.cubicOut(seg(t, t0, t0 + 0.12)); return {s: lerp(from, dot, k), fill: k}; }
+  const k = spring(t - t1, 0.5, 17); return {s: lerp(dot, big, k), fill: clamp(1 - k, 0, 1)};
+}
+// → {x, y, w, h, r, fill, ring, glow, op}
+function lightAt(t) {
+  const L = {x: 0, y: 0, w: 16, h: 16, r: 8, fill: 1, ring: 0, glow: 1, op: 1};
+  if (t < ENTER) { L.x = caretX(t); L.y = CARET_Y; L.w = 4; L.h = 44; L.r = 2; L.op = sstep(0.0, 0.25, t); return L; }
+  if (t < 3.25) { const k = E.expoOut(seg(t, ENTER, 3.22)); L.x = caretX(t); L.y = CARET_Y; L.w = lerp(4, 18, k); L.h = lerp(44, 18, k); L.r = lerp(2, 9, k); return L; }
+  if (t < HOP[0][0]) {
+    const A = {x: caretX(ENTER), y: CARET_Y}, B = SEAT_AV['周'];
+    const p = t < LAND_HOST ? OM.hop(t, 3.25, LAND_HOST, A, B, {height: 90, curve: E.cubicInOut}) : B;
+    L.x = p.x; L.y = p.y; const z = travelSize(t, 3.25, LAND_HOST, 18, HALO, 18); L.w = L.h = z.s; L.r = z.s / 2; L.fill = z.fill; L.ring = 1 - z.fill; return L;
+  }
+  for (let i = 0; i < HOP.length; i++) {
+    const h = HOP[i], nx = HOP[i + 1];
+    if (t < (nx ? nx[0] : SPEC0 + 0.1)) {
+      const p = t < h[1] ? hopPos(t, h) : SEAT_AV[h[3]]; L.x = p.x; L.y = p.y;
+      const z = travelSize(t, h[0], h[1], HALO, HALO); L.w = L.h = z.s; L.r = z.s / 2; L.fill = z.fill; L.ring = 1 - z.fill; return L;
+    }
+  }
+  if (t < SUM0) {
+    const A = SEAT_AV['周'], B = {x: LXC, y: LY[1]}, [a, b] = LIGHT_SPEC;
+    const p = t < b ? OM.hop(t, a, b, A, B, {height: 140, curve: E.cubicInOut}) : B; L.x = p.x; L.y = p.y;
+    const z = travelSize(t, a, b, HALO, 22); L.w = L.h = z.s; L.r = z.s / 2; L.fill = Math.max(z.fill, 0.35); L.ring = 1; return L;
+  }
+  if (t < END0) {
+    const A = {x: LXC, y: LY[1]}, B = {x: DC.x + DC.w / 2, y: DC.y + DC.h / 2}, [a, b] = LIGHT_SUM;
+    if (t < b) { const p = OM.hop(t, a, b, A, B, {height: -160, curve: E.cubicInOut}); const z = travelSize(t, a, b, 22, 16); L.x = p.x; L.y = p.y; L.w = L.h = z.s; L.r = z.s / 2; return L; }
+    const k = spring(t - b, 0.62, 16); L.x = B.x; L.y = B.y; L.w = lerp(16, DC.w + 18, k); L.h = lerp(16, DC.h + 18, k); L.r = lerp(8, 14, Math.min(k, 1));
+    L.fill = 0; L.ring = 1; L.op = 1 - sstep(b + 0.3, b + 0.75, t); return L;
+  }
+  { const A = {x: DC.x + DC.w / 2, y: DC.y + DC.h / 2}, B = WM.dot, [a, b] = LIGHT_END;
+    L.op = sstep(END0, END0 + 0.12, t);
+    if (t < b) { const p = OM.hop(t, a, b, A, B, {height: 150, curve: E.cubicInOut}); L.x = p.x; L.y = p.y; L.w = L.h = 16; return L; }
+    const im = OM.impact(t, b, {decay: 8, omega: 24, sqx: 0.3, sqy: 0.3}); L.x = B.x; L.y = B.y; L.w = 20 * im.sx; L.h = 20 * im.sy; L.r = 10; return L; }
+}
+// the four lights the caret splits into
+function splitAt(t, s) {
+  const t0 = SPLIT0 + s.j * SPLIT_DT, t1 = t0 + SPLIT_FLY, A = SEAT_AV['周'], B = SEAT_AV[s.k];
+  const p = t < t1 ? OM.hop(t, t0, t1, A, B, {height: 40 + 0.06 * Math.abs(B.x - A.x), curve: E.cubicInOut}) : B;
+  const z = travelSize(t, t0 - 0.12, t1, 16, HALO, 14), out = SPLIT_OUT + s.j * 0.09;
+  return {x: p.x, y: p.y, w: z.s, h: z.s, r: z.s / 2, fill: z.fill, ring: 1 - z.fill, glow: 1, op: sstep(t0 - 0.02, t0 + 0.04, t) * (1 - sstep(out, out + 0.28, t)), t1};
+}
+function paintLight(el, L) {
+  if (L.op <= 0.003) { el.style.display = 'none'; return; } el.style.display = 'block';
+  el.style.width = L.w.toFixed(2) + 'px'; el.style.height = L.h.toFixed(2) + 'px'; el.style.borderRadius = L.r.toFixed(2) + 'px';
+  el.style.transform = `translate(${(L.x - L.w / 2).toFixed(2)}px,${(L.y - L.h / 2).toFixed(2)}px)`; el.style.opacity = L.op.toFixed(3);
+  const g = 10 + 14 * L.ring;
+  el.style.background = `rgba(${AMB},${(0.98 * L.fill).toFixed(3)})`;
+  el.style.boxShadow = `0 0 0 ${(2.5 * L.ring).toFixed(2)}px rgba(${AMB},${(0.95 * L.ring).toFixed(3)}), 0 0 ${g.toFixed(1)}px ${(g / 5).toFixed(1)}px rgba(${AMB},${(0.42 * L.glow).toFixed(3)})`;
+}
+
+// ════════════════════════════════════════ trails → stance spectrum ════════════════════════════════════════
+const NTR = 72;
+function buildTrails() {
+  TRAIL = HOP.map(h => { const pts = []; for (let i = 0; i <= 40; i++) { const tt = h[0] + (h[1] - h[0]) * i / 40; const p = hopPos(tt, h); pts.push({t: tt, x: p.x, y: p.y}); } return pts; });
+  const groups = [[0, 1], [2, 3, 4]];
+  TRS = groups.map((g, li) => {
+    const pts = [].concat(...g.map(i => TRAIL[i]));
+    const cum = [0]; for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+    const res = []; let j = 0;
+    for (let k = 0; k < NTR; k++) { const d = cum[cum.length - 1] * k / (NTR - 1); while (j < cum.length - 2 && cum[j + 1] < d) j++;
+      const u = (d - cum[j]) / Math.max(1e-6, cum[j + 1] - cum[j]); res.push({x: lerp(pts[j].x, pts[j + 1].x, u), y: lerp(pts[j].y, pts[j + 1].y, u)}); }
+    return {g, pts, res, delay: li * 0.1, y: LY[li]};
+  });
+}
+function trailPts(t, tr) {
+  if (t < MORPH0) { const out = []; for (const p of tr.pts) { if (p.t <= t) out.push(p); } return out; }
+  return tr.res.map((p, k) => { const u = k / (NTR - 1), a = MORPH0 + tr.delay + 0.32 * u, q = E.smoother(seg(t, a, a + 0.62));
+    return {x: lerp(p.x, lerp(LX0, LX1, u), q), y: lerp(p.y, tr.y, q) - Math.sin(Math.PI * q) * 70 * (1 - 0.6 * u)}; });
+}
+function trailStyle(t, tr) {
+  const a = MORPH0 + tr.delay, fly = sstep(a, a + 0.15, t) * (1 - sstep(a + 0.75, a + 1.0, t)), cool = sstep(a + 0.7, a + 1.25, t);
+  const c = [lerp(245, 236, cool), lerp(184, 238, cool), lerp(65, 241, cool)].map(Math.round);
+  const al = lerp(0.34 + 0.5 * fly, 0.16, cool);
+  return {stroke: `rgba(${c},${al.toFixed(3)})`, w: lerp(2.6, 2, cool)};
+}
+
+// ════════════════════════════════════════ camera ════════════════════════════════════════
+function frameFor(k, zoom) { const x = SEAT_AV[k].x; return {x: clamp(700 + (x - 700) * 0.22, 680, 860), y: 410, zoom}; }
+function buildCamera() {
+  const Z = [1.3, 1.36, 1.42, 1.46, 1.56];
+  KEYS = [
+    {t: 0, x: 560, y: 505, zoom: 2.5}, {t: 1.0, x: 560, y: 505, zoom: 2.5},
+    {t: 2.95, x: 880, y: 505, zoom: 2.05, curve: E.sineInOut}, {t: 3.08, x: 880, y: 505, zoom: 2.05},
+    {t: 3.72, x: 960, y: 300, zoom: 1.28, curve: E.expoInOut},
+    {t: 4.5, x: 945, y: 290, zoom: 1.34, curve: E.sineInOut},
+    {t: 5.08, x: 960, y: 540, zoom: 1.0, curve: E.cubicInOut},
+  ];
+  HOP.forEach((h, i) => { const f = frameFor(h[3], Z[i]); if (i) KEYS.push({t: h[0] - 0.04, ...frameFor(h[2], Z[i - 1])}); KEYS.push({t: h[1] + 0.06, ...f, curve: i ? E.expoInOut : E.cubicInOut}); });
+  const last = frameFor('周', Z[4]);
+  KEYS.push({t: SPEC0, ...last}, {t: 14.75, x: 1260, y: 430, zoom: 1.12, curve: E.cubicInOut}, {t: 15.35, x: 1640, y: 594, zoom: 1.9, curve: E.quintInOut});
+  KEYS.push({t: SUM0, x: 1640, y: 594, zoom: 1.9}, {t: 17.62, x: 1060, y: 1150, zoom: 0.72, curve: E.cubicInOut}, {t: 18.38, x: 760, y: 1600, zoom: 1.45, curve: E.quintInOut});
+  KEYS.push({t: END0, x: 760, y: 1600, zoom: 1.45}, {t: 21.72, x: WM.cx, y: 1612, zoom: 1.0, curve: E.cubicInOut});
+}
+const HANDW = [[1.0, 3.05], [3.05, 5.1], [14.2, 15.5], [17.0, 18.5], [20.8, 21.75]];
+const handEnv = t => HANDW.reduce((m, [a, b]) => Math.max(m, sstep(a, a + 0.3, t) * (1 - sstep(b - 0.3, b, t))), 0);
+const HITS = [[LAND_HOST, 5, 10], [5.5, 5, 10], [7.7, 7, 10], [9.65, 5, 11], [10.85, 7, 11], [11.65, 4, 10], [15.25, 5, 10], [18.3, 6, 9], [21.6, 5, 9]];
+function camAt(t) {
+  const c = OM.camera(t, KEYS), e = handEnv(t) * 4.2;
+  let x = c.x + e * (Math.sin(1.7 * t) + 0.6 * Math.sin(2.9 * t + 1)) / c.zoom, y = c.y + e * (Math.sin(1.3 * t + 2) + 0.5 * Math.sin(3.3 * t)) / c.zoom, rot = c.rot;
+  for (const [th, amp, dec] of HITS) { if (t > th + 0.8) continue; const s = OM.shake(t, th, {amp, decay: dec, seed: Math.round(th * 100)}); x += s.x / c.zoom; y += s.y / c.zoom; rot += s.rot; }
+  return {x, y, zoom: c.zoom, rot};
+}
+
+// ════════════════════════════════════════ positions shared by seek and __motion ════════════════════════════════════════
+const hopEnd = i => HOP[i][1], retire = i => (HOP[i + 1] ? HOP[i + 1][0] : 1e6);
+function speakerAt(t) { if (t >= LAND_HOST - 0.05 && t < HOP[0][0] + 0.05) return '周'; for (let i = HOP.length - 1; i >= 0; i--) if (t >= HOP[i][1] - 0.06 && t < SPEC0 + 0.1) return HOP[i][3]; return null; }
+function stageAv(t, i) {         // the speaker's avatar comes down from its seat, and goes back up when the light leaves
+  const S = SEAT_AV[U[i].p], T = {x: STX[i].avx, y: AV_Y}, a = hopEnd(i) - 0.1, r = retire(i);
+  let k = E.expoOut(seg(t, a, a + 0.45)), op = sstep(a, a + 0.06, t);
+  if (t >= r) { const q = E.cubicInOut(seg(t, r, r + 0.4)); k = 1 - q; op = 1 - sstep(r + 0.18, r + 0.4, t); }
+  const s = lerp(56 / 88, 1, k); return {x: lerp(S.x, T.x, k), y: lerp(S.y, T.y, k), s, op: t < a ? 0 : op};
+}
+function capPos(t, i) {          // a caption drops into the transcript when the next voice starts
+  const r = retire(i); if (t < r) return {x: STAGE_CX - 590, y: CAP_Y, s: 1, op: 1};
+  const k = E.cubicOut(seg(t, r, r + 0.42));
+  return {x: lerp(STAGE_CX - 590, 302 + 430 - 590, k), y: lerp(CAP_Y, 712, k), s: lerp(1, 0.46, k), op: 1 - sstep(r + 0.16, r + 0.42, t)};
+}
+function rowPos(t, i) {
+  const r = retire(i) + 0.22; let y = 690; for (let j = i + 1; j < 4; j++) y += 96 * spring(t - (retire(j) + 0.22), 0.7, 16);
+  const pi = OM.popIn(t, r, {rise: 18}); return {x: 250, y: y + pi.dy, op: t < r ? 0 : pi.op};
+}
+function topicPos(t) {
+  const A = {x: 400, y: 480, s: 40 / 56}, B = {x: 64, y: 40, s: 32 / 56}, C = {x: 240, y: 1436, s: 1};
+  if (t < SUM0 + 0.05) { const k = E.expoOut(seg(t, ENTER, ENTER + 0.7)); return {x: lerp(A.x, B.x, k), y: lerp(A.y, B.y, k), s: lerp(A.s, B.s, k)}; }
+  const k = E.cubicInOut(seg(t, SUM0 + 0.05, SUM0 + 1.0)); return {x: lerp(B.x, C.x, k), y: lerp(B.y, C.y, k) - Math.sin(Math.PI * k) * 120, s: lerp(B.s, C.s, k)};
+}
+function spavPos(t, j) {
+  const s = SP[j], t0 = SPAV0 + j * 0.05, k = spring(t - t0 - 0.05, 0.55, 15), pi = OM.popIn(t, t0, {rise: 0, s0: 0.5, ds: 0.5});
+  return {x: lerp(LXC, s.x, k), y: LY[s.line], s: pi.s, op: t < t0 ? 0 : pi.op};
+}
+function movers(t) {             // world points that move, for __motion
+  const pts = []; const L = lightAt(t); pts.push([L.x - L.w / 2, L.y - L.h / 2], [L.x + L.w / 2, L.y + L.h / 2]);
+  if (t > 3.5 && t < 4.9) LD.forEach(s => { const q = splitAt(t, s); pts.push([q.x, q.y]); });
+  if (t > 5 && t < 14.3) U.forEach((u, i) => { const a = stageAv(t, i), c = capPos(t, i); pts.push([a.x, a.y], [a.x + 44 * a.s, a.y], [c.x + 590, c.y], [c.x + 590 + 590 * c.s, c.y + 130 * c.s]); });
+  if (t > 13.8 && t < 16.5) TRS.forEach(tr => { const p = trailPts(t, tr); for (let k = 0; k < p.length; k += 6) pts.push([p[k].x, p[k].y]); });
+  if (t > 15 && t < 16.5) SP.forEach((s, j) => { const q = spavPos(t, j); pts.push([q.x, q.y]); });
+  const tp = topicPos(t); pts.push([tp.x, tp.y], [tp.x + PRE[TOPIC.length] * tp.s, tp.y + 67 * tp.s]);
+  if (t > 21.5) wmL.forEach((s, i) => { const d = OM.letterDrop(t, WM_IN, i); pts.push([WM.left + i * 60, WM.top + d.y]); });
+  return pts;
+}
+
+// ════════════════════════════════════════ seek ════════════════════════════════════════
+const bg = $('bg').getContext('2d');
+function ground(cam) {
+  bg.setTransform(1, 0, 0, 1, 0, 0); bg.fillStyle = '#0b0d10'; bg.fillRect(0, 0, 1920, 1080);
+  const G = OM.lattice(cam, {depth: 1.2, spacing: 48, px: 1.5}); bg.setTransform(...G.matrix);
+  bg.fillStyle = 'rgba(236,238,241,0.07)'; bg.beginPath(); const r = G.r;
+  for (let x = G.x0; x <= G.x1; x += G.spacing) for (let y = G.y0; y <= G.y1; y += G.spacing) bg.rect(x - r, y - r, 2 * r, 2 * r);
+  bg.fill(); bg.setTransform(1, 0, 0, 1, 0, 0);
+  const v = bg.createRadialGradient(960, 520, 300, 960, 540, 1150); v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.55)'); bg.fillStyle = v; bg.fillRect(0, 0, 1920, 1080);
+}
+function grain() {  // fixed dither so the dark gradients don't band after yuv420p; fixed = holds stay still
+  const g = $('grain').getContext('2d'), n = 256, im = g.createImageData(n, n), rnd = OM.rng(7);
+  for (let i = 0; i < n * n; i++) { const w = rnd() < 0.5 ? 255 : 0; im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = w; im.data[i * 4 + 3] = Math.floor(rnd() * 7); }
+  const c = document.createElement('canvas'); c.width = c.height = n; c.getContext('2d').putImageData(im, 0, 0); g.fillStyle = g.createPattern(c, 'repeat'); g.fillRect(0, 0, 1920, 1080);
+}
+function put(el, x, y, s = 1, op = 1, extra = '') {
+  if (op <= 0.003) { el.style.visibility = 'hidden'; return; } el.style.visibility = 'visible';
+  el.style.opacity = op >= 0.997 ? '1' : op.toFixed(3); el.style.transform = `translate(${x.toFixed(2)}px,${y.toFixed(2)}px) scale(${s.toFixed(4)})${extra}`;
+}
+const fadeOut = (t, a, d = 0.4) => 1 - sstep(a, a + d, t);
+let CAM = null;
+function seek(t) {
+  CAM = camAt(t); ground(CAM);
+  const M = OM.view(CAM); $('world').style.transform = `matrix(${M.map(v => v.toFixed(5)).join(',')})`;
+  const studioOut = fadeOut(t, SUM0 + 0.1, 0.65), spk = speakerAt(t), disc = sstep(5.2, 5.6, t) * (1 - sstep(SPEC0, SPEC0 + 0.5, t));
+  const back = 1 - 0.92 * sstep(SPEC0 + 0.1, SPEC0 + 0.8, t);           // stage and seats step back while the spectrum forms
+
+  // ── input box → header bar ──
+  { const pi = OM.popIn(t, BOX_IN, {rise: 0, s0: 0.97, ds: 0.03}), A = {x: 360, y: 448, w: 1200, h: 150, r: 16}, B = {x: 40, y: 24, w: 1840, h: 72, r: 16};
+    const m = OM.morphRect(t, ENTER, ENTER + 0.6, A, B), b = $('box'), sc = pi.s;
+    const w = m.w * sc, h = m.h * sc, x = m.x + (m.w - w) / 2, y = m.y + (m.h - h) / 2;
+    b.style.left = x + 'px'; b.style.top = y + 'px'; b.style.width = w + 'px'; b.style.height = h + 'px'; b.style.borderRadius = m.r + 'px';
+    const fill = (t < BOX_IN ? 0 : pi.op) * (1 - sstep(ENTER + 0.2, ENTER + 0.6, t));
+    b.style.background = `rgba(22,25,30,${fill.toFixed(3)})`; b.style.boxShadow = `inset 0 0 0 1px rgba(236,238,241,${(0.14 * fill).toFixed(3)})`;
+    b.style.visibility = fill > 0.003 ? 'visible' : 'hidden';
+    const inner = fill * (1 - sstep(ENTER, ENTER + 0.18, t)); [...b.children].forEach(c => c.style.opacity = inner.toFixed(3));
+    $('cnt').textContent = OM.typeOn(t, TYPE0, TOPIC, {cps: TYPE_CPS}).n + '/200';
+    const pr = OM.press(t, ENTER - 0.02, {depth: 0.12}); $('btn').style.transform = `scale(${pr.s.toFixed(3)})`; }
+  // ── the topic: typed, then the header, then the summary's title ──
+  { const ty = OM.typeOn(t, TYPE0, TOPIC, {cps: TYPE_CPS}), tp = topicPos(t), el = $('topic');
+    if (el.textContent !== ty.str) el.textContent = ty.str;
+    put(el, tp.x, tp.y, tp.s, fadeOut(t, END0 + 0.05, 0.45)); }
+  // ── header right ──
+  { const op = sstep(3.55, 3.9, t) * studioOut; const cur = spk && t > 5.3 ? U.findIndex((u, i) => t >= hopEnd(i) - 0.06 && t < retire(i)) : -1;
+    const tab = cur >= 0 ? U[cur].tab : 0; [...$('tabs').children].forEach((s, i) => s.className = i === tab ? 'on' : '');
+    put($('tabs'), 1385, 44, 1, op);
+    const n = cur < 0 ? (t > 12 ? 4 : 0) : Math.min(cur + 1, 4); $('turns').innerHTML = `${n} / 12<i><b style="width:${(n / 12 * 100).toFixed(1)}%"></b></i>`;
+    put($('turns'), 1705, 46, 1, op); }
+  // ── seat bar: five lights land, five seats appear ──
+  { const pi = OM.popIn(t, 3.42, {rise: 14, s0: 0.985, ds: 0.015}); put($('seatbar'), 0, pi.dy, 1, (t < 3.42 ? 0 : pi.op) * studioOut * back);
+    $('hostlines').style.opacity = ((t < 3.42 ? 0 : pi.op) * studioOut * back).toFixed(3);
+    SEATS.forEach(k => {
+      const land = k === '周' ? LAND_HOST : splitAt(0, LD.find(s => s.k === k)).t1, d = seatEls[k];
+      const pi2 = OM.popIn(t, land - 0.02, {rise: 16}); const lit = spk === k;
+      const dim = lit ? 1 : 1 - 0.5 * disc;
+      put(d, 0, pi2.dy, 1, (t < land - 0.02 ? 0 : pi2.op) * dim * studioOut * back);
+      const flash = k === '周' ? 0 : sstep(land, land + 0.06, t) * fadeOut(t, SPLIT_OUT + 0.2, 0.4);
+      d.style.background = `rgba(${AMB},${(0.07 * (lit && t > 5 ? 1 : flash)).toFixed(3)})`;
+      const st = d.querySelector('.st'); if (st) { const on = lit && t > 5; st.className = on ? 'st on' : 'st'; st.querySelector('.w').textContent = on ? '发言中' : '待机'; }
+    }); }
+  // ── stage ──
+  { put($('glow'), 0, 0, 1, sstep(5.3, 5.8, t) * (1 - 0.6 * sstep(SPEC0, SPEC0 + 0.6, t)) * studioOut);
+    U.forEach((u, i) => {
+      const e = stageEls[i], a = stageAv(t, i);
+      put(e.av, a.x - 44 * a.s, a.y - 44 * a.s, a.s, a.op * studioOut * back);
+      const w = OM.wordRise(t, hopEnd(i) + 0.08, {dist: 14}), r = retire(i);
+      put(e.tx, STX[i].txl, AV_Y - 44 + w.y, 1, (t < hopEnd(i) + 0.08 ? 0 : w.op) * fadeOut(t, r, 0.16) * studioOut * back);
+      const t0 = hopEnd(i) + 0.18, ty = OM.typeOn(t, t0, u.text, {cps: u.cps}), c = capPos(t, i);
+      const html = t < t0 ? '' : `${ty.str}${ty.done ? '' : '<i></i>'}<span class="g">${u.text.slice(ty.n)}</span>`;
+      if (e.cap._h !== html) { e.cap.innerHTML = html; e.cap._h = html; }
+      put(e.cap, c.x, c.y, c.s, (t < t0 ? 0 : c.op) * studioOut * back);
+    });
+    $('divider').style.opacity = (sstep(PANELS_IN, PANELS_IN + 0.4, t) * studioOut * back).toFixed(3);
+    rowEls.forEach((el, i) => { const r = rowPos(t, i); put(el, r.x, r.y, 1, r.op * studioOut * back); }); }
+  // ── right column: consensus, divergence, spectrum ──
+  { const pi = OM.popIn(t, PANELS_IN + 0.12, {rise: 24}); const on = (t < PANELS_IN + 0.12 ? 0 : pi.op) * studioOut;
+    put($('rcol'), 0, pi.dy, 1, on);
+    ['ch', 'cm', 'dh'].forEach((k, j) => { const p2 = OM.popIn(t, PANELS_IN + 0.2 + j * 0.05, {rise: 14}); put(R[k], 0, p2.dy, 1, (t < PANELS_IN + 0.2 + j * 0.05 ? 0 : p2.op) * studioOut); });
+    put(R.dm, 0, 0, 1, sstep(PANELS_IN + 0.3, PANELS_IN + 0.6, t) * fadeOut(t, MORPH0 - 0.1, 0.25) * studioOut);
+    $('dcount').textContent = t < MORPH0 + 0.5 ? '0' : t < MORPH0 + 0.6 ? '1' : '2';
+    DIV.forEach((dv, i) => {
+      const w = OM.wordRise(t, MORPH0 + 0.35 + i * 0.12, {dist: 16}); put(R['dv' + i], 0, w.y, 1, (t < MORPH0 + 0.35 + i * 0.12 ? 0 : w.op) * studioOut);
+      ['l0', 'l1', 'l2'].forEach((k, j) => put(R[k + i], 0, 0, 1, sstep(SPAV0 + 0.1 + j * 0.05, SPAV0 + 0.35 + j * 0.05, t) * studioOut));
+      put(R['tick' + i], 0, 0, 1, sstep(MORPH0 + 0.75, MORPH0 + 1.0, t) * studioOut);
+    });
+    SP.forEach((s, j) => { const q = spavPos(t, j); put(s.el, q.x - 16 * q.s, q.y - 16 * q.s, q.s, q.op * studioOut); }); }
+  // ── trails: where the light went, stretched into the two spectrum lines ──
+  ['trA', 'trB'].forEach((id, i) => {
+    const tr = TRS[i], pts = trailPts(t, tr), el = $(id);
+    if (t < HOP[0][0] || pts.length < 2) { el.setAttribute('d', ''); return; }
+    if (t < MORPH0) { const L = lightAt(t), h = tr.g.find(g => t >= HOP[g][0] && t < HOP[g][1]); if (h !== undefined) pts.push({x: L.x, y: L.y}); }
+    el.setAttribute('d', 'M' + pts.map(p => p.x.toFixed(1) + ' ' + p.y.toFixed(1)).join('L'));
+    const st = trailStyle(t, tr); el.setAttribute('stroke', st.stroke); el.setAttribute('stroke-width', st.w.toFixed(2));
+    el.style.opacity = studioOut.toFixed(3);
+  });
+  // ── summary page ──
+  { const out = fadeOut(t, END0 + 0.05, 0.45);
+    const l = OM.wordRise(t, SUM_IN, {dist: 14}); put($('sumlab'), 240, 1400 + l.y, 1, (t < SUM_IN ? 0 : l.op) * out);
+    put($('stats'), 240, 1526, 1, (t < SUM_IN + 0.08 ? 0 : 1) * out);
+    statEls.forEach((s, i) => { const w = OM.wordRise(t, SUM_IN + 0.1 + i * 0.06, {dist: 16}); s.style.opacity = (t < SUM_IN + 0.1 + i * 0.06 ? 0 : w.op).toFixed(3); s.style.transform = `translateY(${w.y.toFixed(2)}px)`; });
+    $('sumdiv').style.opacity = (sstep(SUM_IN + 0.2, SUM_IN + 0.5, t) * out).toFixed(3);
+    // the drop cap is there before its paragraph: the light became it; the sentence follows
+    const land = LIGHT_SUM[1] - 0.04; put($('para'), PARA.x, PARA.y, 1, (t < land ? 0 : 1) * out);
+    const dc = $('dc'), warm = sstep(land, land + 0.08, t) * (1 - sstep(LIGHT_SUM[1] + 0.3, LIGHT_SUM[1] + 0.68, t));
+    dc.style.color = `rgb(${Math.round(lerp(236, 245, warm))},${Math.round(lerp(238, 184, warm))},${Math.round(lerp(241, 65, warm))})`;
+    dc.style.textShadow = warm > 0.01 ? `0 0 ${(26 * warm).toFixed(1)}px rgba(${AMB},${(0.55 * warm).toFixed(3)})` : 'none';
+    [['pf', PARA_IN], ['pr', PARA_IN + 0.16]].forEach(([id, a]) => $(id).style.opacity = (t < a ? 0 : sstep(a, a + 0.32, t)).toFixed(3));
+  }
+  // ── end card: the light becomes the dot beside the name ──
+  { put($('wm'), WM.left, WM.top, 1, t >= WM_IN ? 1 : 0);
+    wmL.forEach((s, i) => { const d = OM.letterDrop(t, WM_IN, i, {dist: 54}); s.style.opacity = (t < WM_IN ? 0 : d.op).toFixed(3); s.style.transform = `translateY(${d.y.toFixed(2)}px) scale(${d.sx.toFixed(4)},${d.sy.toFixed(4)})`; });
+    const w = OM.wordRise(t, SUB_IN, {dist: 12}); put($('wmsub'), WM.sub.x, WM.sub.y + w.y, 1, t < SUB_IN ? 0 : w.op * 0.9); }
+  // ── the light ──
+  { const L = lightAt(t); paintLight($('light'), L);
+    const rest = L.ring * (L.w > 40 && L.w < 100 ? 1 : 0) * (t > LAND_HOST && t < SPEC0 + 0.3 ? 1 : 0);
+    put($('pool'), L.x - 180, L.y - 180, 1, 0.9 * rest * L.op);
+    LD.forEach(s => paintLight(s.el, splitAt(t, s))); }
+  $('hud').textContent = 't=' + t.toFixed(3);
+  return Promise.resolve();
+}
+
+// ════════════════════════════════════════ contract ════════════════════════════════════════
+function effOp(el) { let o = 1; for (let n = el; n && n.nodeType === 1; n = n.parentElement) { const cs = getComputedStyle(n); if (cs.visibility === 'hidden' || cs.display === 'none') return 0; o *= parseFloat(cs.opacity); } return o; }
+window.__track = () => { const out = {};
+  document.querySelectorAll('[data-k]').forEach(el => { const op = effOp(el); if (op < 0.02) return; const r = el.getBoundingClientRect(); if (r.width < 1 || r.height < 1) return;
+    out[el.dataset.k] = {x: r.left, y: r.top, w: r.width, h: r.height, op}; });
+  return out; };
+window.__motion = (t0, t1) => {
+  const c0 = camAt(t0), c1 = camAt(t1), cm = camAt((t0 + t1) / 2); let d = OM.screenTravel(c0, c1, cm);
+  const M0 = OM.view(c0), M1 = OM.view(c1), A = movers(t0), B = movers(t1);
+  for (let i = 0; i < Math.min(A.length, B.length); i++) { const p = OM.project(M0, A[i][0], A[i][1]), q = OM.project(M1, B[i][0], B[i][1]); d = Math.max(d, Math.hypot(p[0] - q[0], p[1] - q[1])); }
+  return d; };
+window.__events = () => {   // for the score: every contact, panned by where it is on screen at that instant
+  const ev = [], at = (t, kind, wx, wy, v = 1) => { const p = OM.project(OM.view(camAt(t)), wx, wy); ev.push({t: +t.toFixed(3), kind, pan: +clamp((p[0] - 960) / 960, -1, 1).toFixed(3), v}); };
+  for (let i = 1; i <= TOPIC.length; i++) { const tt = TYPE0 + i / TYPE_CPS; if (TOPIC[i - 1] !== ' ') at(tt - 0.05, 'key', caretX(tt), CARET_Y, 0.6 + 0.4 * ((i * 7) % 5) / 4); }
+  at(ENTER - 0.02, 'enter', caretX(ENTER), CARET_Y);
+  at(3.28, 'lift', caretX(ENTER), CARET_Y); at(LAND_HOST, 'land', SEAT_AV['周'].x, SEAT_AV['周'].y, 1);
+  LD.forEach(s => { const q = splitAt(0, s); at(q.t1, 'seat', SEAT_AV[s.k].x, SEAT_AV[s.k].y, 0.8); });
+  at(PANELS_IN, 'panels', 960, 540, 0.7);
+  HOP.forEach((h, i) => { at(h[0], 'hop', SEAT_AV[h[2]].x, 185, 0.6 + 0.1 * i); at(h[1], 'hopland', SEAT_AV[h[3]].x, 185, i === 4 ? 1 : 0.8); });
+  U.forEach((u, i) => { const t0 = hopEnd(i) + 0.18; for (let n = 2; n < u.text.length; n += 4) at(t0 + n / u.cps, 'type', STAGE_CX, CAP_Y, 0.5); });
+  U.slice(0, 4).forEach((u, i) => at(retire(i) + 0.05, 'drop', 700, 600, 0.6));
+  at(LIGHT_SPEC[0], 'stretch', SEAT_AV['周'].x, 185, 1); at(LIGHT_SPEC[1], 'tick', LXC, LY[1], 0.8);
+  SP.forEach((s, j) => at(SPAV0 + j * 0.05 + 0.2, 'avatar', s.x, LY[s.line], 0.7));
+  at(LIGHT_SUM[0], 'travel', LXC, LY[1], 1); at(LIGHT_SUM[1], 'dropcap', DC.x + 40, DC.y + 40, 1);
+  at(END0 + 0.1, 'rise', DC.x + 40, DC.y + 40, 0.8); at(LIGHT_END[1], 'mark', WM.dot.x, WM.dot.y, 1);
+  wmL.forEach((s, i) => { if (WORDMARK[i] !== ' ') at(WM_IN + i * 0.055 + 0.08, 'letter', WM.left + i * 70, WM.top + 50, 0.5); });
+  return {T: DUR, events: ev.sort((a, b) => a.t - b.t)};
+};
+window.__seek = async t => { await seek(t); return true; };
+window.__ready = (window.LOOK ? LOOK.ready : document.fonts.ready).then(() => document.fonts.ready).then(() => { measure(); grain(); return seek(0); });
+const q = new URLSearchParams(location.search);
+if (q.has('t')) __ready.then(() => seek(parseFloat(q.get('t'))));
+if (q.has('hud')) $('hud').style.display = 'block';
+if (q.has('play')) __ready.then(() => { const t0 = performance.now(); (function loop() { seek(((performance.now() - t0) / 1000) % DUR); requestAnimationFrame(loop); })(); });
+</script>
+</body>
+</html>

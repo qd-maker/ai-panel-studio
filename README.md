@@ -2,6 +2,10 @@
 
 输入一个话题，系统用大模型生成一位主持人和一组立场冲突的专家，确认阵容后在浏览器里实时观看一场圆桌讨论：主持人开场、追问、串联和收尾，专家按各自的发言意图举手、抢答、补充或反驳，共识与分歧随发言实时更新，结束时主持人给出自然语言总结。
 
+[![25 秒演示视频（点击打开 MP4）](docs/media/demo.gif)](docs/media/demo.mp4)
+
+25 秒演示视频：[docs/media/demo.mp4](docs/media/demo.mp4)（1080p，带音效）。一束追光贯穿全片：从输入框的光标开始，点亮嘉宾席位，在发言人之间跳动，留下的轨迹拉成立场光谱，最后落进总结页的首字。画面用 [onetake](docs/media/src/README.md) 按产品界面重建，内容来自一场真实的 DeepSeek 讨论；字体为 Noto Sans SC、Inter、Geist Mono（均为 OFL 授权）。
+
 ![演播厅](docs/images/studio.png)
 
 ![总结页](docs/images/summary.png)

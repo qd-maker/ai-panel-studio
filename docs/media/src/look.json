@@ -1,0 +1,20 @@
+{
+  "name": "panel-studio",
+  "from": "frontend/src/index.css (深场演播厅 · 单束追光)",
+  "mood": "deep studio black, one amber spotlight, cool grey type, guest colours only on rings and names",
+  "color": {
+    "ground": "#0b0d10",
+    "deep": "#07080a",
+    "card": "#16191e",
+    "line": "#23272d",
+    "mute": "#9ba3ae",
+    "ink": "#eceef1",
+    "accent": "#f5b841",
+    "accent2": "#c3c9d2"
+  },
+  "type": {
+    "display": { "face": "Inter", "weight": 700, "tracking": 0 },
+    "text": { "face": "Inter", "weight": 400, "tracking": 0 },
+    "mono": { "face": "Geist Mono", "weight": 400, "tracking": 0 }
+  }
+}
