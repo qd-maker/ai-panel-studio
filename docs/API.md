@@ -32,11 +32,21 @@
 | --- | --- | --- |
 | 404 | DISCUSSION_NOT_FOUND | 讨论不存在 |
 | 409 | INVALID_STATE_TRANSITION | 当前状态不允许这个操作 |
+| 409 | LINEUP_GENERATING | 这场讨论的阵容正在生成，暂时不能修改阵容或开始 |
 | 422 | VALIDATION_ERROR | 请求参数不合法，`details.fields` 列出出错字段 |
 | 429 | TOO_MANY_RUNNING | 同时运行的讨论已达 3 场 |
 | 502 | LLM_UNAVAILABLE | 模型服务调用失败或超时，重试后仍未成功 |
 | 502 | LLM_BAD_OUTPUT | 模型输出没有通过校验，重试后仍未成功 |
 | 500 | INTERNAL_ERROR | 其他未预期的错误 |
+
+超时也归入 502 `LLM_UNAVAILABLE`，不单独使用 504。前端对超时和其他上游失败的处理相同，都提示用户稍后重试。具体原因（超时、限流、连接失败）写入 `internal` 的 `llm.call` 事件，供排查使用。
+
+### 并发控制
+
+后端为每场讨论维护一把锁。生成阵容、重新生成阵容、开始、结束这四个操作必须先拿到这把锁。
+
+- 锁被阵容生成占用时，重新生成和开始请求立即返回 409 `LINEUP_GENERATING`，不排队等待。
+- 结束操作和讨论后台任务之间通过取消任务来协调，不受这条限制。
 
 ## 数据结构
 
@@ -208,7 +218,7 @@
 
 响应 `200 OK`：`DiscussionDetail`，`status` 为 `lineup_ready`。
 
-错误：`404 DISCUSSION_NOT_FOUND`；`409 INVALID_STATE_TRANSITION`（状态不是 `draft` 或 `lineup_ready`）；`422 VALIDATION_ERROR`；`502 LLM_UNAVAILABLE`；`502 LLM_BAD_OUTPUT`。生成失败时保留原阵容和原状态。
+错误：`404 DISCUSSION_NOT_FOUND`；`409 INVALID_STATE_TRANSITION`（状态不是 `draft` 或 `lineup_ready`）；`409 LINEUP_GENERATING`（上一次生成还没结束）；`422 VALIDATION_ERROR`；`502 LLM_UNAVAILABLE`；`502 LLM_BAD_OUTPUT`。生成失败时保留原阵容和原状态。
 
 ### POST /api/discussions/{id}/start
 
@@ -226,7 +236,7 @@
 }
 ```
 
-错误：`404 DISCUSSION_NOT_FOUND`；`409 INVALID_STATE_TRANSITION`（状态不是 `lineup_ready`）；`429 TOO_MANY_RUNNING`。
+错误：`404 DISCUSSION_NOT_FOUND`；`409 INVALID_STATE_TRANSITION`（状态不是 `lineup_ready`）；`409 LINEUP_GENERATING`（阵容正在重新生成）；`429 TOO_MANY_RUNNING`。
 
 ### POST /api/discussions/{id}/abort
 
@@ -302,7 +312,20 @@ Cache-Control: no-cache
 X-Accel-Buffering: no
 ```
 
-讨论不存在时，在开始推流之前返回 `404 DISCUSSION_NOT_FOUND`（JSON 格式）。
+查询参数：
+
+| 参数 | 类型 | 必填 | 校验 |
+| --- | --- | --- | --- |
+| after | integer | 否 | 大于等于 0 的整数 |
+
+以下错误在开始推流之前返回，格式为 JSON：
+
+| 状态码 | code | 场景 |
+| --- | --- | --- |
+| 404 | DISCUSSION_NOT_FOUND | 讨论不存在 |
+| 422 | VALIDATION_ERROR | `after` 是负数或非整数 |
+
+请求头 `Last-Event-ID` 由浏览器自动发送，格式不合法时后端忽略它，按下面的顺序改用 `after` 或从最新事件开始推送。这里不返回 422，因为错误响应会让 `EventSource` 反复重连，并且每次都失败。
 
 **起始位置**
 

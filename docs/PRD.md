@@ -67,6 +67,7 @@ AI Panel Studio 是一个本地运行的 Web 应用。用户输入话题和专�
 
 - **AC-4.1** Given 讨论处于 `lineup_ready`，When 请求重新生成，Then 旧嘉宾全部被替换，返回新阵容，状态仍为 `lineup_ready`。
 - **AC-4.2** Given 讨论处于 `running`，When 请求重新生成，Then 返回 409，错误码为 `INVALID_STATE_TRANSITION`，嘉宾不变。
+- **AC-4.3** Given 一次重新生成正在进行，When 用户再次请求重新生成或请求开始，Then 立即返回 409，错误码为 `LINEUP_GENERATING`；第一次生成完成后，讨论只有一套阵容。
 
 ### US-5 确认阵容并开始
 
