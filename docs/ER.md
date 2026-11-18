@@ -146,9 +146,9 @@ erDiagram
 | addressed_participant_id | TEXT | 外键，可空 | 发言点名的对象。主持人 `question` 必填 |
 | created_at | TEXT | 非空 | 发言时间 |
 
-`act` 的取值：
+`act` 的取值如下。Transcript 不显示专家的 `act`，只显示“→ 被回应人姓名”；主持人的 `act` 在主持人区显示为当前环节。
 
-| 值 | 谁会用 | 界面标签 |
+| 值 | 谁会用 | 中文名 |
 | --- | --- | --- |
 | opening | 主持人 | 开场 |
 | question | 主持人 | 追问 |
@@ -223,7 +223,7 @@ erDiagram
 | discussion_id | TEXT | 外键，建索引 | 所属讨论，冗余存储，方便一次查出整场 |
 | status | TEXT | 非空，默认 `idle` | `idle` 待机、`preparing` 准备发言、`speaking` 发言中 |
 | focus | TEXT | 可空，最多 20 字 | 当前关注点 |
-| public_thought | TEXT | 可空，最多 60 字 | 公开思考摘要。来自意图收集时模型单独输出的字段，与模型的隐藏推理无关 |
+| public_thought | TEXT | 可空，最多 60 字 | 公开思考摘要。来自意图收集时模型单独输出的字段，与模型的隐藏推理无关。只写观点本身，不含“想补充”“想反驳”“举手”等发言意图，`AgentState` 校验 `focus` 和本字段 |
 | version | INTEGER | 非空，从 1 开始 | 每次更新加 1 |
 | updated_at | TEXT | 非空 | 最后更新时间 |
 

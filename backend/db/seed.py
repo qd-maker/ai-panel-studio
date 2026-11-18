@@ -20,8 +20,10 @@ from sqlalchemy import Connection, Engine, text
 from app import schemas
 from app.db import get_engine
 
-HOST_COLOR = "#5B6475"
-EXPERT_COLORS = ["#E4572E", "#2E86AB", "#F2A541", "#3BB273", "#7768AE", "#D1495B"]
+# 嘉宾专属色只用于头像圈和姓名文字，所以每个颜色在深色表面 #16191E 上都要 ≥ 4.5:1（实测 7.6 以上），
+# 并且避开黄橙色，不和界面唯一的强调色（追光 #F5B841）混淆。
+HOST_COLOR = "#C3C9D2"
+EXPERT_COLORS = ["#FF8A6B", "#5CC8F0", "#6FD6A6", "#B7A3FF", "#F58FB8", "#B8DB6B"]
 BASE_TIME = datetime(2026, 11, 15, 9, 0, tzinfo=timezone.utc)
 
 
@@ -300,6 +302,24 @@ SEEDS: list[dict] = [
 ]
 
 
+# 已结束讨论里每位专家的最终小窗内容：(当前关注点, 公开思考摘要)。
+# 只写观点本身，不写「想补充 / 想反驳」这类发言意图（schemas.AgentState 会校验）。
+FINAL_VIEWS: dict[str, dict[str, tuple[str, str]]] = {
+    "tech": {
+        "E1": ("初级岗位的招聘数据", "门槛抬高而培养跟不上，普通院校毕业生最先受冲击"),
+        "E2": ("团队真实的招聘标准", "初级岗位会减少但不会清零，审查 AI 代码是新门槛"),
+        "E3": ("新人的独立开发路径", "AI 降低了做产品的门槛，机会在转移而不是消失"),
+        "E4": ("课程改革的进度", "学校要让学生在校期间就做出能上线的项目"),
+    },
+    "health": {
+        "E1": ("首诊的漏诊风险", "由签约家庭医生做线上首诊可以接受，其他情况仍需查体"),
+        "E2": ("平台与社区的分工", "平台做连接和随访，和社区合作比自建医生团队成本低"),
+        "E3": ("医保支付规则", "分人群放开，先覆盖签约了家庭医生的慢病患者"),
+        "E4": ("患者的时间成本", "换季小病先线上问，孩子发烧这类情况还是去线下"),
+    },
+}
+
+
 # ---------------------------------------------------------------------------
 # 导入逻辑
 # ---------------------------------------------------------------------------
@@ -362,12 +382,20 @@ def _seed_one(conn: Connection, spec: dict, index: int) -> str:
             ),
             {**participant.model_dump(), "d": did, "c": iso(created)},
         )
+        focus, thought = FINAL_VIEWS.get(key, {}).get(code, (None, None))
+        state = schemas.AgentState(
+            participant_id=pid[code], status="idle", focus=focus, public_thought=thought,
+            version=1, updated_at=ended or created,
+        )
         conn.execute(
             text(
-                "INSERT INTO agent_state (participant_id, discussion_id, status, version, updated_at) "
-                "VALUES (:p, :d, 'idle', 1, :u)"
+                "INSERT INTO agent_state (participant_id, discussion_id, status, focus, public_thought, "
+                "version, updated_at) VALUES (:p, :d, :status, :focus, :thought, :version, :u)"
             ),
-            {"p": pid[code], "d": did, "u": iso(ended or created)},
+            {
+                "p": state.participant_id, "d": did, "status": state.status, "focus": state.focus,
+                "thought": state.public_thought, "version": state.version, "u": iso(ended or created),
+            },
         )
 
     if not is_done:

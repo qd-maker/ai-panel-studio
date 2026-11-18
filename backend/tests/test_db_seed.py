@@ -88,7 +88,45 @@ def test_create_request_defaults_and_strips():
     assert req.expert_count == 4
 
 
-@pytest.mark.parametrize("color", ["red", "#FFF", "#GGGGGG", "E4572E", "#E4572E0"])
+@pytest.mark.parametrize(
+    "text_",
+    ["想补充一下许安的说法", "准备反驳陈拓", "想接着「补充」说两句", "我要举手", "抢答：其实不对", "评估要不要接话"],
+)
+def test_agent_state_rejects_speaking_intent(text_):
+    """专家小窗只公开观点本身，发言意图属于 internal（违规修复：公开思考摘要不含发言意图）。"""
+    with pytest.raises(ValidationError):
+        schemas.AgentState(
+            participant_id="p1", status="preparing", public_thought=text_, version=1,
+            updated_at="2026-11-18T00:00:00Z",
+        )
+    with pytest.raises(ValidationError):
+        schemas.AgentState(
+            participant_id="p1", status="preparing", focus=text_[:20], version=1,
+            updated_at="2026-11-18T00:00:00Z",
+        )
+
+
+def test_agent_state_accepts_plain_viewpoint():
+    s = schemas.AgentState(
+        participant_id="p1", status="speaking", focus="中小企业的招聘数据",
+        public_thought="大厂的数据不能代表整个行业，中小公司的初级岗位在增加", version=1,
+        updated_at="2026-11-18T00:00:00Z",
+    )
+    assert s.public_thought.startswith("大厂")
+
+
+def test_seed_agent_states_contain_only_viewpoints(engine):
+    seed(engine)
+    with engine.connect() as conn:
+        rows = conn.execute(
+            text("SELECT focus, public_thought FROM agent_state WHERE public_thought IS NOT NULL")
+        ).all()
+    assert len(rows) == 8  # 两场已结束讨论 × 4 位专家
+    for focus, thought in rows:
+        assert not schemas.SPEAKING_INTENT.search(focus + thought), (focus, thought)
+
+
+@pytest.mark.parametrize("color",["red", "#FFF", "#GGGGGG", "E4572E", "#E4572E0"])
 def test_participant_rejects_invalid_color(color):
     with pytest.raises(ValidationError):
         schemas.Participant(

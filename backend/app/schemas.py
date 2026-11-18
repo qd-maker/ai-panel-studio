@@ -6,10 +6,11 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, StringConstraints
+from pydantic import AfterValidator, BaseModel, ConfigDict, Field, StringConstraints
 
 # ---------- 枚举 ----------
 
@@ -42,6 +43,22 @@ Topic = Annotated[str, StringConstraints(strip_whitespace=True, min_length=5, ma
 ExpertCount = Annotated[int, Field(ge=2, le=6)]
 HexColor = Annotated[str, StringConstraints(pattern=r"^#[0-9A-Fa-f]{6}$")]
 Id = Annotated[str, StringConstraints(min_length=1)]
+
+# 专家小窗只公开「观点本身」。发言意图（想补充、想反驳、举手、抢答⋯⋯）属于 internal 事件，
+# 不能出现在 focus / public_thought 里。模型输出命中这些说法时校验失败，由调用方重试。
+SPEAKING_INTENT = re.compile(
+    r"(想|准备|打算|急着|等着).{0,6}?(补充|反驳|回应|接话|插话|发言|说两句|接着说|反问|追问)"
+    r"|举手|抢答|抢话|插话|接话|拿到发言权|轮到我"
+)
+
+
+def _no_speaking_intent(v: str | None) -> str | None:
+    if v is not None and SPEAKING_INTENT.search(v):
+        raise ValueError("只能写观点本身，不能包含发言意图（如想补充、想反驳、举手）")
+    return v
+
+
+PublicViewText = Annotated[str | None, AfterValidator(_no_speaking_intent)]
 
 MIN_EXPERTS, MAX_EXPERTS, DEFAULT_EXPERTS = 2, 6, 4
 MAX_UTTERANCE_CHARS = 120
@@ -121,8 +138,8 @@ class Utterance(_Response):
 class AgentState(_Response):
     participant_id: Id
     status: AgentStatus
-    focus: str | None = Field(default=None, max_length=MAX_FOCUS_CHARS)
-    public_thought: str | None = Field(default=None, max_length=MAX_PUBLIC_THOUGHT_CHARS)
+    focus: PublicViewText = Field(default=None, max_length=MAX_FOCUS_CHARS)
+    public_thought: PublicViewText = Field(default=None, max_length=MAX_PUBLIC_THOUGHT_CHARS)
     version: int = Field(ge=1)
     updated_at: datetime
 
