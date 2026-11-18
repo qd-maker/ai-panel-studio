@@ -124,6 +124,11 @@ def _apply_one(op: Op, people: set[str], utt_ids: set[int], current: dict[str, d
             raise ValueError("只有分歧可以标记为已化解")
         new["status"] = op.status
 
+    # 更新后仍要满足建表时的约束：分歧两边都至少一人，共识至少一位认同者
+    if new["kind"] == "divergence" and new["status"] in ("emerging", "confirmed") and not (new["supporter_ids"] and new["opponent_ids"]):
+        raise ValueError("更新后分歧只剩一边，应改为 set_status resolved 或新建共识")
+    if new["kind"] == "consensus" and not new["supporter_ids"]:
+        raise ValueError("更新后共识没有认同者")
     if all(new[k] == row[k] for k in ("content", "supporter_ids", "opponent_ids", "evidence_utterance_ids", "status")):
         return None, ""  # 没有实际变化，不升版本
     new["version"] = row["version"] + 1

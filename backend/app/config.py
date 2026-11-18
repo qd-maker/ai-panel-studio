@@ -26,6 +26,9 @@ class Settings(BaseModel):
 
     # 资源
     max_running: int = Field(default=3, ge=1)
+    # 单条 SSE 连接最长存活秒数，到时由服务端关闭，浏览器带 Last-Event-ID 自动重连续传。
+    # 用来避开反向代理的长连接超时；0 表示不限制
+    sse_max_stream_s: float = Field(default=0, ge=0)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -37,6 +40,7 @@ class Settings(BaseModel):
             "turn_delay_s": "TURN_DELAY_S",
             "max_expert_turns": "MAX_EXPERT_TURNS",
             "max_running": "MAX_RUNNING",
+            "sse_max_stream_s": "SSE_MAX_STREAM_S",
         }.items():
             if var in env:
                 values[field] = env[var]

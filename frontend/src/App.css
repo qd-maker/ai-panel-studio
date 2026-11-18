@@ -16,35 +16,32 @@
 }
 
 .app-brand {
+  color: var(--text);
   font-weight: 600;
+  text-decoration: none;
 }
 
-.app-brand em {
-  margin-left: var(--s-8);
-  color: var(--text-2);
-  font-size: var(--fs-12);
-  font-style: normal;
-  font-weight: 400;
-}
-
-.app-nav {
+.page-message {
   display: flex;
-  gap: var(--s-4);
-}
-
-.app-nav-btn {
-  height: 28px;
-  padding: 0 var(--s-12);
-  border: 0;
-  border-radius: var(--r-8);
-  background: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-16);
+  padding: var(--s-48) var(--s-16);
   color: var(--text-2);
-  font-size: var(--fs-12);
+  text-align: center;
 }
 
-.app-nav-btn.is-on {
+.home-empty {
+  color: var(--text-2);
+}
+
+/* 演播厅顶部的提示条：断线重连、讨论异常终止 */
+.studio-notice {
+  padding: var(--s-8) var(--s-16);
+  border-radius: var(--r-8);
   background: var(--fill-strong);
   color: var(--text);
+  font-size: var(--fs-14);
 }
 
 .app-main {
@@ -99,12 +96,12 @@
   height: 100%;
 }
 
-/* 预览台专用：切换总结「生成中」状态的按钮 */
-.summary-toggle {
+/* 页面右下角的切换按钮（总结 ↔ 现场记录） */
+.page-corner {
   position: absolute;
   right: var(--s-16);
   bottom: var(--s-16);
-  height: 28px;
+  height: 32px;
   font-size: var(--fs-12);
 }
 

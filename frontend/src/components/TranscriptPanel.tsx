@@ -112,7 +112,7 @@ export default function TranscriptPanel({ utterances, participants, allUtterance
             const replyTo = u.reply_to_utterance_id ? uttById.get(u.reply_to_utterance_id) : undefined
             const target = (replyTo && byId.get(replyTo.participant_id)) ?? (u.addressed_participant_id ? byId.get(u.addressed_participant_id) : undefined)
             return (
-              <li key={u.id} className="utt" style={{ '--c': p.color } as CSSProperties}>
+              <li key={u.id} className="utt" data-utt-id={u.id} style={{ '--c': p.color } as CSSProperties}>
                 <span className="avatar avatar-sm utt-avatar">{p.name.slice(0, 1)}</span>
                 <div className="utt-body">
                   <div className="utt-caption">

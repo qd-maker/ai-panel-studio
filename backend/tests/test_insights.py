@@ -108,6 +108,19 @@ async def test_invalid_extraction_json_leaves_existing_insights_untouched(engine
     assert insights_of(engine, did) == before
 
 
+async def test_update_that_leaves_a_divergence_one_sided_is_rejected(engine, seeded):
+    """E2E 发现：反对者被加进赞成方后，分歧只剩一边。这类更新应被拒绝，条目保持原样。"""
+    did, e, u = seeded
+    apply(engine, did, [{"op": "create", "kind": "divergence", "content": "岗位总量会显著减少",
+                         "supporter_ids": [e[0]], "opponent_ids": [e[1]], "evidence_utterance_ids": [u[2]]}])
+    [before] = insights_of(engine, did)
+
+    changes = apply(engine, did, [{"op": "update", "id": before["id"], "add_supporter_ids": [e[1]]}])
+
+    assert changes == []
+    assert insights_of(engine, did) == [before]
+
+
 async def test_insight_citing_an_unknown_utterance_is_dropped(engine, seeded):
     did, e, u = seeded
     apply(engine, did, [

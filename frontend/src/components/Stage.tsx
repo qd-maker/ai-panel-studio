@@ -50,7 +50,7 @@ export default function Stage({ utterance, participants, targetName, speakerStat
   const lit = speakerState?.status === 'speaking'
 
   return (
-    <section className={`stage ${lit ? 'is-lit' : ''}`} aria-label="舞台" aria-live="polite">
+    <section className={`stage ${lit ? 'is-lit' : ''}`} aria-label="舞台" aria-live="polite" data-utt-id={utterance.id}>
       <div className="stage-speaker" style={{ '--c': speaker.color } as CSSProperties}>
         <span className="avatar stage-avatar">{speaker.name.slice(0, 1)}</span>
         <div className="stage-id">

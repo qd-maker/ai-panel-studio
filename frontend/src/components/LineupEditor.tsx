@@ -131,7 +131,7 @@ export default function LineupEditor({
           <button type="button" className="btn" disabled={busy !== null} onClick={onRegenerate}>
             {regenerating ? '生成中⋯⋯' : '重新生成'}
           </button>
-          <button type="button" className="btn btn-primary" disabled={busy !== null} onClick={onConfirm}>
+          <button type="button" className="btn btn-primary" disabled={busy !== null || !onConfirm} onClick={onConfirm}>
             {busy === 'starting' ? (
               '正在开场⋯⋯'
             ) : (

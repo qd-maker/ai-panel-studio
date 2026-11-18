@@ -116,9 +116,24 @@ async def stream(did: str, request: Request, after: int | None = Query(None, ge=
     # Last-Event-ID 由浏览器自动发送，格式不对时忽略（报错会让 EventSource 反复重连失败）
     start = int(header) if header.isdigit() else after if after is not None else tail
 
+    max_s = request.app.state.settings.sse_max_stream_s
+
     async def frames():
-        async for f in public_event_stream(request.app, did, start):
-            yield {"id": str(f["id"]), "event": f["event"], "data": json.dumps(f["data"], ensure_ascii=False)}
+        yield {"retry": 3000, "comment": "connected"}  # 断线后浏览器 3 秒重连
+        stream = public_event_stream(request.app, did, start)
+        deadline = asyncio.get_running_loop().time() + max_s if max_s else None
+        try:
+            while True:
+                timeout = None if deadline is None else deadline - asyncio.get_running_loop().time()
+                if timeout is not None and timeout <= 0:
+                    return  # 到时主动断开，浏览器带 Last-Event-ID 重连续传
+                try:
+                    f = await asyncio.wait_for(anext(stream), timeout)
+                except (StopAsyncIteration, TimeoutError):
+                    return
+                yield {"id": str(f["id"]), "event": f["event"], "data": json.dumps(f["data"], ensure_ascii=False)}
+        finally:
+            await stream.aclose()
 
     return EventSourceResponse(frames(), ping=15, headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}, send_timeout=30)
 

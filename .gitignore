@@ -14,3 +14,8 @@ backend/data/
 # Node
 node_modules/
 dist/
+
+# E2E
+e2e/.tmp/
+e2e/test-results/
+e2e/playwright-report/
