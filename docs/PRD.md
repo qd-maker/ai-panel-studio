@@ -1,6 +1,6 @@
 # AI Panel Studio 产品需求文档（PRD）
 
-本文档定义 MVP 的范围、用户故事、讨论推进规则和验收标准。数据模型见 [ER.md](ER.md)，接口契约见 [API.md](API.md)。作业原文见 [assignment.md](assignment.md)。
+本文档定义 MVP 的范围、用户故事、讨论推进规则和验收标准。数据模型见 [ER.md](ER.md)，接口契约见 [API.md](API.md)。
 
 ## 产品范围
 
